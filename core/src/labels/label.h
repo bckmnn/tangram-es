@@ -124,13 +124,10 @@ public:
 
     virtual ~Label();
 
-    /* Update the transform of the label in world space, and project it to screen space */
-    void updateTransform(const Transform& _transform, const glm::mat4& _mvp, const glm::vec2& _screenSize);
-
     bool update(const glm::mat4& _mvp, const glm::vec2& _screenSize, float _zoomFract);
 
     /* Push the pending transforms to the vbo by updating the vertices */
-    void pushTransform();
+    virtual void pushTransform();
 
     bool evalState(const glm::vec2& _screenSize, float _dt);
 
