@@ -548,9 +548,6 @@ void setupGL() {
     // ShaderPrograms are invalidated and immediately rebuilt
     ShaderProgram::invalidateAllPrograms();
 
-    // Buffer objects are invalidated and re-uploaded the next time they are used
-    VboMesh::invalidateAllVBOs();
-
     // Texture objects are invalidated and re-uploaded the next time they are updated
     Texture::invalidateAllTextures();
 
