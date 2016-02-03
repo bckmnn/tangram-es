@@ -1,7 +1,6 @@
 #pragma once
 
 #include "label.h"
-#include "textLabel.h"
 #include "spriteLabel.h"
 #include "tile/tileID.h"
 #include "data/properties.h"
@@ -56,7 +55,7 @@ private:
                          const std::vector<std::shared_ptr<Tile>>& _tiles,
                          std::unique_ptr<TileCache>& _cache, float _currentZoom) const;
 
-    void checkRepeatGroups(std::vector<TextLabel*>& _visibleSet) const;
+    void checkRepeatGroups(std::vector<Label*>& _visibleSet) const;
 
     int LODDiscardFunc(float _maxZoom, float _zoom);
 
