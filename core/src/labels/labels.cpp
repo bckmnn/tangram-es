@@ -319,7 +319,6 @@ void Labels::update(const View& _view, float _dt,
 
     // Request for render if labels are in fading in/out states
     if (m_needUpdate) {
-        LOG("animate");
         requestRender();
     }
 
