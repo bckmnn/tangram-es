@@ -29,6 +29,7 @@ void LabelMesh::pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state) {
         v.color = _quad.color;
         // FIXME: can be unsafe with union (works only because extrude set right before)
         v.stroke = _quad.stroke;
+        v.textureUnit = 0; // _quad.atlas;
         v.state = _state;
     }
 

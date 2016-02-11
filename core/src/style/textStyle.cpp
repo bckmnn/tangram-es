@@ -13,6 +13,7 @@
 #include "labels/labelContainer.h"
 #include "labels/textLabel.h"
 #include "text/fontContext.h"
+#include "debug/textDisplay.h"
 
 #include <mutex>
 #include <locale>
@@ -31,14 +32,16 @@ TextStyle::TextStyle(std::string _name, bool _sdf, Blending _blendMode, GLenum _
 TextStyle::~TextStyle() {}
 
 void TextStyle::constructVertexLayout() {
+    // 8 attributes is usually maximum for OpenGL ES, don't add more
     m_vertexLayout = std::shared_ptr<VertexLayout>(new VertexLayout({
         {"a_position", 2, GL_SHORT, false, 0},
         {"a_uv", 2, GL_UNSIGNED_SHORT, false, 0},
         {"a_color", 4, GL_UNSIGNED_BYTE, true, 0},
         {"a_stroke", 4, GL_UNSIGNED_BYTE, true, 0},
+        {"a_textureUnit", 1, GL_UNSIGNED_INT, false, 0},
         {"a_screenPosition", 2, GL_SHORT, false, 0},
         {"a_alpha", 1, GL_SHORT, true, 0},
-        {"a_rotation", 1, GL_SHORT, false, 0},
+        {"a_rotation", 1, GL_SHORT, false, 0}
     }));
 }
 
@@ -82,6 +85,7 @@ void TextStyle::onEndDrawFrame() {
         return;
     }
 
+    LOGS("%d", m_context->glyphBatchCount());
     m_context->bindTexture(0, 0);
     
     if (m_sdf) {

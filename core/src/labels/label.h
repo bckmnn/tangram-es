@@ -67,8 +67,13 @@ public:
         glm::u16vec2 uv;
         uint32_t color;
         union {
-            glm::i16vec2 extrude;
-            uint32_t stroke;
+            struct {
+                glm::i16vec2 extrude;
+            };
+            struct {
+                uint32_t stroke;
+                unsigned int textureUnit;
+            };
         };
         struct State {
             State() {}

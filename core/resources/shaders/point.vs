@@ -31,6 +31,7 @@ attribute LOWP float a_rotation;
 attribute LOWP vec4 a_color;
 #ifdef TANGRAM_TEXT
 attribute LOWP vec4 a_stroke;
+attribute LOWP float a_textureUnit;
 #else
 attribute vec3 a_extrude;
 #endif
@@ -39,6 +40,7 @@ varying vec4 v_color;
 varying vec2 v_texcoords;
 #ifdef TANGRAM_TEXT
 varying float v_sdf_threshold;
+varying float v_textureUnit;
 #endif
 varying float v_alpha;
 const vec4 clipped = vec4(2.0, 0.0, 2.0, 1.0);
@@ -60,6 +62,8 @@ void main() {
 
         #ifdef TANGRAM_TEXT
         v_texcoords = a_uv * u_uv_scale_factor;
+        v_textureUnit = a_textureUnit;
+
         if (u_pass == 0) {
             // fill
             v_sdf_threshold = 0.5;

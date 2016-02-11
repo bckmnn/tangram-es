@@ -39,8 +39,6 @@ public:
 
     void draw(ShaderProgram& _shader, bool _clear = true) override;
 
-    void compile(std::vector<Label::Vertex>& _vertices);
-
     static void loadQuadIndices();
 
     void pushQuad(GlyphQuad& _quad, Label::Vertex::State& _state);

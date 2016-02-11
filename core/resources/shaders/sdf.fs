@@ -34,6 +34,7 @@ varying vec4 v_color;
 varying vec2 v_texcoords;
 varying float v_sdf_threshold;
 varying float v_alpha;
+varying float v_textureUnit;
 
 #pragma tangram: global
 
