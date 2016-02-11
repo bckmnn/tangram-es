@@ -56,6 +56,10 @@ void TextStyle::constructShaderProgram() {
 }
 
 void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureUnit) {
+    if (!m_mesh) {
+        return;
+    }
+
     m_context->updateTextures();
 
     m_shaderProgram->setUniformf("u_uv_scale_factor",
@@ -64,37 +68,51 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureU
     m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
 
     // Upload meshes for next frame
-    for (size_t i = 0; i < m_meshes.size(); i++) {
-        m_meshes[i]->myUpload();
-    }
+    //for (size_t i = 0; i < m_meshes.size(); i++) {
+    //    m_meshes[i]->myUpload();
+    //}
+
+    m_mesh->myUpload();
 
     Style::onBeginDrawFrame(_view, _scene, 1);
 }
 
 void TextStyle::onEndDrawFrame() {
+    if (!m_mesh) {
+        return;
+    }
 
+    m_context->bindTexture(0, 0);
+    
     if (m_sdf) {
         m_shaderProgram->setUniformi("u_pass", 1);
-        for (size_t i = 0; i < m_meshes.size(); i++) {
-            m_context->bindTexture(i, 0);
-
-            m_meshes[i]->draw(*m_shaderProgram, false);
-        }
+        //for (size_t i = 0; i < m_meshes.size(); i++) {
+        //    m_context->bindTexture(i, 0);
+        //
+        //    m_meshes[i]->draw(*m_shaderProgram, false);
+        //}
+        m_mesh->draw(*m_shaderProgram, false);
         m_shaderProgram->setUniformi("u_pass", 0);
     }
 
-    for (size_t i = 0; i < m_meshes.size(); i++) {
-        m_context->bindTexture(i, 0);
-
-        m_meshes[i]->draw(*m_shaderProgram, true);
-    }
+    //for (size_t i = 0; i < m_meshes.size(); i++) {
+    //    m_context->bindTexture(i, 0);
+    //
+    //    m_meshes[i]->draw(*m_shaderProgram, true);
+    //}
+    m_mesh->draw(*m_shaderProgram, false);
 }
 
 void TextStyle::onUpdate() {
     size_t s = m_context->glyphBatchCount();
-    while (m_meshes.size() < s) {
-        m_meshes.push_back(std::make_unique<LabelMesh>(m_vertexLayout, GL_TRIANGLES));
+
+    if (s > 0) {
+        m_mesh = std::make_unique<LabelMesh>(m_vertexLayout, GL_TRIANGLES);
     }
+
+    //while (m_meshes.size() < s) {
+    //    m_meshes.push_back(std::make_unique<LabelMesh>(m_vertexLayout, GL_TRIANGLES));
+    //}
 }
 
 struct TextBatch : public alf::TextBatch {

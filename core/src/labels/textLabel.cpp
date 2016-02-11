@@ -93,7 +93,7 @@ void TextLabel::pushTransform() {
     auto end = it + m_vertexRange.length;
 
     for (; it != end; ++it) {
-        style.mesh(it->atlas).pushQuad(*it, state);
+        style.mesh().pushQuad(*it, state);
     }
 }
 
