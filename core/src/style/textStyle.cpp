@@ -15,6 +15,7 @@
 #include "text/fontContext.h"
 
 #include <mutex>
+#include <locale>
 
 #include "platform.h"
 #include "tangram.h"
@@ -180,7 +181,7 @@ struct TextBatch : public alf::TextBatch {
 
 };
 
-struct TextStyleBuiler : public StyleBuilder {
+struct TextStyleBuilder : public StyleBuilder {
 
     const TextStyle& m_style;
 
@@ -238,7 +239,7 @@ struct TextStyleBuiler : public StyleBuilder {
 
     ScratchBuffer m_scratch;
 
-    TextStyleBuiler(const TextStyle& _style) :
+    TextStyleBuilder(const TextStyle& _style) :
         StyleBuilder(_style),
         m_style(_style),
         m_batch(_style.context()->m_atlas, m_scratch) {}
@@ -277,16 +278,20 @@ struct TextStyleBuiler : public StyleBuilder {
     bool prepareLabel(TextStyle::Parameters& _params, Label::Type _type);
     void addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                   Label::Transform _transform);
+
+    std::string applyTextTransform(const TextStyle::Parameters& _params,
+                                   const std::string& _string);
 };
 
-bool TextStyleBuiler::checkRule(const DrawRule& _rule) const {
+bool TextStyleBuilder::checkRule(const DrawRule& _rule) const {
     return true;
 }
 
 
-void TextStyleBuiler::addPoint(const Point& _point,
-                               const Properties& _props,
-                               const DrawRule& _rule) {
+void TextStyleBuilder::addPoint(const Point& _point,
+                                const Properties& _props,
+                                const DrawRule& _rule)
+{
     TextStyle::Parameters params = applyRule(_rule, _props);
 
     if (!prepareLabel(params, Label::Type::point)) { return; }
@@ -294,10 +299,10 @@ void TextStyleBuiler::addPoint(const Point& _point,
     addLabel(params, Label::Type::point, { glm::vec2(_point), glm::vec2(_point) });
 }
 
-void TextStyleBuiler::addLine(const Line& _line,
-                              const Properties& _props,
-                              const DrawRule& _rule) {
-
+void TextStyleBuilder::addLine(const Line& _line,
+                               const Properties& _props,
+                               const DrawRule& _rule)
+{
     TextStyle::Parameters params = applyRule(_rule, _props);
 
     if (!prepareLabel(params, Label::Type::line)) { return; }
@@ -315,14 +320,48 @@ void TextStyleBuiler::addLine(const Line& _line,
     }
 }
 
-void TextStyleBuiler::addPolygon(const Polygon& _polygon,
-                                 const Properties& _props,
-                                 const DrawRule& _rule) {
+void TextStyleBuilder::addPolygon(const Polygon& _polygon,
+                                  const Properties& _props,
+                                  const DrawRule& _rule)
+{
     Point p = glm::vec3(centroid(_polygon), 0.0);
     addPoint(p, _props, _rule);
 }
 
-bool TextStyleBuiler::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
+std::string TextStyleBuilder::applyTextTransform(const TextStyle::Parameters& _params,
+                                                 const std::string& _string)
+{
+    std::locale loc;
+    std::string text = _string;
+
+    switch (_params.transform) {
+        case TextLabelProperty::Transform::capitalize:
+            text[0] = toupper(text[0], loc);
+            if (text.size() > 1) {
+                for (size_t i = 1; i < text.length(); ++i) {
+                    if (text[i - 1] == ' ') {
+                        text[i] = std::toupper(text[i], loc);
+                    }
+                }
+            }
+            break;
+        case TextLabelProperty::Transform::lowercase:
+            for (size_t i = 0; i < text.length(); ++i) {
+                text[i] = std::tolower(text[i], loc);
+            }
+            break;
+        case TextLabelProperty::Transform::uppercase:
+            // TODO : use to wupper when any wide character is detected
+            for (size_t i = 0; i < text.length(); ++i) {
+                text[i] = std::toupper(text[i], loc);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+bool TextStyleBuilder::prepareLabel(TextStyle::Parameters& _params, Label::Type _type) {
 
     if (_params.text.empty() || _params.fontSize <= 0.f) {
         LOGD("invalid params: '%s' %f", _params.text.c_str(), _params.fontSize);
@@ -383,7 +422,7 @@ bool TextStyleBuiler::prepareLabel(TextStyle::Parameters& _params, Label::Type _
     return true;
 }
 
-void TextStyleBuiler::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
+void TextStyleBuilder::addLabel(const TextStyle::Parameters& _params, Label::Type _type,
                        Label::Transform _transform) {
 
     int numQuads = m_scratch.numQuads;
@@ -399,7 +438,7 @@ void TextStyleBuiler::addLabel(const TextStyle::Parameters& _params, Label::Type
                                           m_scratch.quadsLocalOrigin));
 }
 
-TextStyle::Parameters TextStyleBuiler::applyRule(const DrawRule& _rule,
+TextStyle::Parameters TextStyleBuilder::applyRule(const DrawRule& _rule,
                                            const Properties& _props) const {
 
     const static std::string key_name("name");
@@ -509,7 +548,7 @@ TextStyle::Parameters TextStyleBuiler::applyRule(const DrawRule& _rule,
 }
 
 std::unique_ptr<StyleBuilder> TextStyle::createBuilder() const {
-    return std::make_unique<TextStyleBuiler>(*this);
+    return std::make_unique<TextStyleBuilder>(*this);
 }
 
 }
