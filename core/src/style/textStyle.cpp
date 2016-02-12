@@ -67,7 +67,13 @@ void TextStyle::onBeginDrawFrame(const View& _view, Scene& _scene, int _textureU
 
     m_shaderProgram->setUniformf("u_uv_scale_factor",
                                  glm::vec2(1.0f / textureSize));
-    m_shaderProgram->setUniformi("u_tex", 0);
+
+    // TODO: use a define for maxtexture unit available (checking the driver)
+    m_shaderProgram->setUniformi("u_tex0", 0);
+    m_shaderProgram->setUniformi("u_tex1", 1);
+    m_shaderProgram->setUniformi("u_tex2", 2);
+    m_shaderProgram->setUniformi("u_tex3", 3);
+
     m_shaderProgram->setUniformMatrix4f("u_ortho", _view.getOrthoViewportMatrix());
 
     // Upload meshes for next frame
@@ -86,24 +92,16 @@ void TextStyle::onEndDrawFrame() {
     }
 
     LOGS("%d", m_context->glyphBatchCount());
-    m_context->bindTexture(0, 0);
-    
+
+    // TODO: only if mesh is ready
+    m_context->bindAtlases(4);
+
     if (m_sdf) {
         m_shaderProgram->setUniformi("u_pass", 1);
-        //for (size_t i = 0; i < m_meshes.size(); i++) {
-        //    m_context->bindTexture(i, 0);
-        //
-        //    m_meshes[i]->draw(*m_shaderProgram, false);
-        //}
         m_mesh->draw(*m_shaderProgram, false);
         m_shaderProgram->setUniformi("u_pass", 0);
     }
 
-    //for (size_t i = 0; i < m_meshes.size(); i++) {
-    //    m_context->bindTexture(i, 0);
-    //
-    //    m_meshes[i]->draw(*m_shaderProgram, true);
-    //}
     m_mesh->draw(*m_shaderProgram, false);
 }
 

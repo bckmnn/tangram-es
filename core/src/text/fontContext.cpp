@@ -126,10 +126,18 @@ void AlfonsContext::updateTextures() {
     }
 }
 
-void AlfonsContext::bindTexture(alf::AtlasID _id, GLuint _unit) {
+void AlfonsContext::bindAtlases(int _maxTextureUnit) {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_batches[_id].texture.bind(_unit);
+    GLuint textureUnit = 0;
 
+    for (auto& m_batch : m_batches) {
+        m_batch.texture.bind(textureUnit);
+
+        if (textureUnit++ >= _maxTextureUnit) {
+            LOGW("Max atlas texture unit reached");
+            break;
+        }
+    }
 }
 
 auto AlfonsContext::getFont(const std::string& _family, const std::string& _style,

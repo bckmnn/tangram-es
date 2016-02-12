@@ -65,7 +65,7 @@ public:
         return m_batches.size();
     }
 
-    void bindTexture(alf::AtlasID _id, GLuint _unit);
+    void bindAtlases(int _maxTextureUnit);
 
     // TODO private
     std::mutex m_mutex;

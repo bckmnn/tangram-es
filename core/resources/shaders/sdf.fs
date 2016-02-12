@@ -19,7 +19,10 @@
 
 const float emSize = 15.0 / 16.0;
 
-uniform sampler2D u_tex;
+uniform sampler2D u_tex0;
+uniform sampler2D u_tex1;
+uniform sampler2D u_tex2;
+uniform sampler2D u_tex3;
 uniform vec3 u_map_position;
 uniform vec3 u_tile_origin;
 uniform vec2 u_resolution;
@@ -42,11 +45,11 @@ float contour(in float d, in float w, float t) {
     return smoothstep(t - w, t + w, d);
 }
 
-float sample(in vec2 uv, float w, float t) {
-    return contour(texture2D(u_tex, uv).a, w, t);
+float sample(sampler2D tex, in vec2 uv, float w, float t) {
+    return contour(texture2D(tex, uv).a, w, t);
 }
 
-float sampleAlpha(in vec2 uv, float distance, float threshold) {
+float sampleAlpha(sampler2D tex, in vec2 uv, float distance, float threshold) {
     const float smoothing = 0.0625 * emSize; // 0.0625 = 1.0/1em ratio
     float alpha = contour(distance, smoothing, threshold);
 
@@ -56,10 +59,10 @@ float sampleAlpha(in vec2 uv, float distance, float threshold) {
     vec2 duv = dscale * (dFdx(uv) + dFdy(uv));
     vec4 box = vec4(uv - duv, uv + duv);
 
-    float asum = sample(box.xy, aaSmooth, threshold)
-               + sample(box.zw, aaSmooth, threshold)
-               + sample(box.xw, aaSmooth, threshold)
-               + sample(box.zy, aaSmooth, threshold);
+    float asum = sample(tex, box.xy, aaSmooth, threshold)
+               + sample(tex, box.zw, aaSmooth, threshold)
+               + sample(tex, box.xw, aaSmooth, threshold)
+               + sample(tex, box.zy, aaSmooth, threshold);
 
     alpha = mix(alpha, asum, 0.25);
 #endif
@@ -72,9 +75,19 @@ void main(void) {
     vec4 color = v_color;
 
     //float distance = texture2D(u_tex, v_texcoords).a;
-    // color *= v_alpha * pow(sampleAlpha(v_texcoords, distance, v_sdf_threshold), 0.4545);
+    // color *= v_alpha * pow(sampleAlpha(tex, v_texcoords, distance, v_sdf_threshold), 0.4545);
 
-    float dist = texture2D(u_tex, v_texcoords).a;
+    float dist;
+
+    if (v_textureUnit == 0.0) {
+        dist = texture2D(u_tex0, v_texcoords).a;
+    } else if (v_textureUnit == 1.0) {
+        dist = texture2D(u_tex1, v_texcoords).a;
+    } else if (v_textureUnit == 2.0) {
+        dist = texture2D(u_tex2, v_texcoords).a;
+    } else if (v_textureUnit == 3.0) {
+        dist = texture2D(u_tex3, v_texcoords).a;
+    }
 
     // emSize 15/16 = .937
     // float s = 0.0625 * emSize; // 0.0625 = 1.0/1em ratio
@@ -87,7 +100,6 @@ void main(void) {
                              dist);
 
     color *= v_alpha * alpha;
-
 
     #pragma tangram: color
     #pragma tangram: filter
