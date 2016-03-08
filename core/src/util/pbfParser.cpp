@@ -23,6 +23,9 @@ namespace Tangram {
 
 void PbfParser::extractGeometry(ParserContext& _ctx, protobuf::message& _geomIn) {
 
+    _ctx.coordinates.clear();
+    _ctx.numCoordinates.clear();
+
     pbfGeomCmd cmd = pbfGeomCmd::moveTo;
     uint32_t cmdRepeat = 0;
 
@@ -131,9 +134,6 @@ struct update_visitor {
 };
 
 bool PbfParser::extractTags(ParserContext& _ctx, protobuf::message& _tagsMsg) {
-
-    _ctx.coordinates.clear();
-    _ctx.numCoordinates.clear();
 
     // keep previous tags to check which tags changed
     _ctx.featureTags.swap(_ctx.previousTags);
@@ -246,11 +246,11 @@ void PbfParser::extractFeature(ParserContext& _ctx, protobuf::message& _featureI
         }
     }
 
-    if (!geomMsg || !tagsMsg || feature.geometryType == GeometryType::unknown) {
+    if (!geomMsg || feature.geometryType == GeometryType::unknown) {
         return;
     }
 
-    if (!extractTags(_ctx, tagsMsg)) {
+    if (tagsMsg && !extractTags(_ctx, tagsMsg)) {
         return;
     }
 
