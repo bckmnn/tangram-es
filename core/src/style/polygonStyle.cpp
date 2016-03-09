@@ -122,12 +122,6 @@ struct PolygonStyleBuilder : public StyleBuilder {
 
 public:
 
-    struct {
-        glm::vec2 extrude;
-        float height;
-        float minHeight;
-    } m_params;
-
     void setup(const Tile& _tile) override {
         m_tileUnitsPerMeter = _tile.getInverseScale();
         m_zoom = _tile.getID().z;
@@ -161,6 +155,12 @@ public:
     std::unique_ptr<PolygonMesh> m_mesh;
 
 private:
+
+    struct {
+        glm::vec2 extrude;
+        float height;
+        float minHeight;
+    } m_params;
 
     const PolygonStyle& m_style;
 

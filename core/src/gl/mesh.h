@@ -53,7 +53,7 @@ public:
      */
     void upload();
 
-    /*
+    /*-
      * Sub data upload of the mesh, returns true if this results in a buffer binding
      */
     void subDataUpload();
