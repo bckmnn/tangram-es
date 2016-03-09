@@ -160,9 +160,6 @@ bool DrawRuleMergeSet::match(const Feature& _feature, const SceneLayer& _layer, 
 void DrawRuleMergeSet::apply(const Feature& _feature, const SceneLayer& _layer,
                              StyleContext& _ctx, TileBuilder& _builder) {
 
-    // If no rules matched the feature, return immediately
-    if (!match(_feature, _layer, _ctx)) { return; }
-
     // For each matched rule, find the style to be used and
     // build the feature with the rule's parameters
     for (auto& rule : m_matchedRules) {

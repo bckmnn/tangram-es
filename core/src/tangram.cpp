@@ -28,6 +28,7 @@
 #include <bitset>
 #include <mutex>
 #include <queue>
+#include <array>
 
 namespace Tangram {
 

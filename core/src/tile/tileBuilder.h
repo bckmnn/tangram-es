@@ -1,19 +1,18 @@
 #pragma once
 
-#include "data/dataSource.h"
 #include "scene/styleContext.h"
 #include "scene/drawRule.h"
+#include "data/tileData.h"
 
 namespace Tangram {
 
 class DataLayer;
 class DataSource;
 class Tile;
-struct TileData;
+class TileTask;
 class StyleBuilder;
 
-class TileBuilder {
-
+class TileBuilder : public TileDataSink {
 public:
 
     TileBuilder();
@@ -24,7 +23,13 @@ public:
 
     void setScene(std::shared_ptr<Scene> _scene);
 
-    std::shared_ptr<Tile> build(TileID _tileID, const TileData& _data, const DataSource& _source);
+    // Process TileTask. On sucess _task.isReady() is true
+    // and _task.tile() returns the created tile.
+    bool build(TileTask& _task);
+
+    virtual bool beginLayer(const std::string& _layer) override;
+    virtual bool matchFeature(const Feature& _feature) override;
+    virtual void addFeature(const Feature& _feature) override;
 
     const Scene& scene() const { return *m_scene; }
 
@@ -35,6 +40,11 @@ private:
     DrawRuleMergeSet m_ruleSet;
 
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilder;
+
+    std::vector<const DataLayer*> m_activeLayers;
+    const DataLayer* m_matchedLayer = nullptr;
+
+    std::shared_ptr<Tile> m_tile;
 };
 
 }
