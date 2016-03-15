@@ -41,6 +41,7 @@ private:
 
     fastmap<std::string, std::unique_ptr<StyleBuilder>> m_styleBuilder;
 
+    std::string m_activeSource;
     std::vector<const DataLayer*> m_activeLayers;
     const DataLayer* m_matchedLayer = nullptr;
 
