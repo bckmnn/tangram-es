@@ -12,6 +12,7 @@
 #include "style/polygonStyle.h"
 #include "style/polylineStyle.h"
 #include "style/textStyle.h"
+#include "style/treeStyle.h"
 #include "style/debugStyle.h"
 #include "style/debugTextStyle.h"
 #include "style/pointStyle.h"
@@ -69,6 +70,7 @@ bool SceneLoader::loadScene(Node& config, Scene& _scene) {
     // Instantiate built-in styles
     _scene.styles().emplace_back(new PolygonStyle("polygons"));
     _scene.styles().emplace_back(new PolylineStyle("lines"));
+    _scene.styles().emplace_back(new TreeStyle("tree"));
     _scene.styles().emplace_back(new DebugTextStyle("debugtext", true));
     _scene.styles().emplace_back(new TextStyle("text", true));
     _scene.styles().emplace_back(new DebugStyle("debug"));
@@ -563,6 +565,8 @@ bool SceneLoader::loadStyle(const std::string& name, Node config, Scene& scene) 
         style = std::make_unique<TextStyle>(name, true);
     } else if (baseStyle == "points") {
         style = std::make_unique<PointStyle>(name);
+    } else if (baseStyle == "tree") {
+        style = std::make_unique<TreeStyle>(name);
     } else {
         LOGW("Base style '%s' not recognized, cannot instantiate.", baseStyle.c_str());
         return false;

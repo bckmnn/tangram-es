@@ -46,19 +46,23 @@ textures:
 styles:
     flatcolor:
         base: polygons
-        lighting: false
+        #lighting: false
     heightglow:
         base: polygons
-        lighting: vertex
-        shaders:
-            blocks:
-                color: "color.rgb += vec3(position.z / 800.);"
+        #lighting: vertex
+        #shaders:
+        #    blocks:
+        #        color: "color.rgb += vec3(position.z / 800.);"
     heightglowline:
         base: lines
         mix: heightglow
     icons:
         base: points
         texture: pois
+    trees:
+        base: tree
+        lighting: fragment
+        lighting: true
 
 sources:
     osm:
@@ -153,7 +157,7 @@ layers:
             lines:
                 color: white
                 width: 12.
-                order: 'function() { return feature.sort_key + 5 }'
+                order: 'function() { return feature.sort_key }'
                 outline:
                     color: [[16, '#999'], [18, '#aaa']]
                     width: [[10, 0], [16, 2]]
@@ -239,7 +243,12 @@ layers:
                         outline:
                             color: orange
                             width: [[11, 0], [12, 1.], [17, 2.]]
-
+    poi_icons:
+        data: { source: osm, layer: pois }
+        #filter: { kind: [tree] }
+        draw:
+            tree:
+                order: 0
     poi_icons:
         data: { source: osm, layer: pois }
         filter: { name: true, not: { kind: [peak, viewpoint, bicycle_rental, car_sharing] }, $zoom: { min: 15 } }

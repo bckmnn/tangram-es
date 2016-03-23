@@ -29,7 +29,7 @@ Style::LightHandle::LightHandle(Light* _light, std::unique_ptr<LightUniforms> _u
     : light(_light), uniforms(std::move(_uniforms)){}
 
 const std::vector<std::string>& Style::builtInStyleNames() {
-    static std::vector<std::string> builtInStyleNames{ "points", "lines", "polygons", "text", "debug", "debugtext" };
+    static std::vector<std::string> builtInStyleNames{ "points", "lines", "polygons", "text", "debug", "debugtext", "tree" };
     return builtInStyleNames;
 }
 
