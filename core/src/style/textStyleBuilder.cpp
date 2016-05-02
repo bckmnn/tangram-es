@@ -45,7 +45,7 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
     TextStyle::Parameters params = applyRule(_rule, _feat.props);
 
     Label::Type labelType;
-    if (_feat.geometryType == GeometryType::lines) {
+    if (_feat.geometry.type == GeometryType::lines) {
         labelType = Label::Type::line;
         params.wordWrap = false;
     } else {
@@ -58,24 +58,24 @@ void TextStyleBuilder::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
     if (!prepareLabel(params, labelType)) { return; }
 
-    if (_feat.geometryType == GeometryType::points) {
-        for (auto& point : _feat.points) {
+    if (_feat.geometry.type == GeometryType::points) {
+        for (auto& point : _feat.points()) {
             auto p = glm::vec2(point);
             addLabel(params, Label::Type::point, { p, p });
         }
 
-    } else if (_feat.geometryType == GeometryType::polygons) {
-        for (auto& polygon : _feat.polygons) {
+    } else if (_feat.geometry.type == GeometryType::polygons) {
+        for (auto& polygon : _feat.polygons()) {
             auto p = centroid(polygon);
             addLabel(params, Label::Type::point, { p, p });
         }
 
-    } else if (_feat.geometryType == GeometryType::lines) {
+    } else if (_feat.geometry.type == GeometryType::lines) {
 
         float pixel = 2.0 / (m_tileSize * m_style.pixelScale());
         float minLength = m_attributes.width * pixel * 0.2;
 
-        for (auto& line : _feat.lines) {
+        for (auto& line : _feat.lines()) {
             for (size_t i = 0; i < line.size() - 1; i++) {
                 glm::vec2 p1 = glm::vec2(line[i]);
                 glm::vec2 p2 = glm::vec2(line[i + 1]);

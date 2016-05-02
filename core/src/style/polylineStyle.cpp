@@ -325,24 +325,24 @@ bool PolylineStyleBuilder<V>::evalWidth(const StyleParam& _styleParam, float& wi
 template <class V>
 void PolylineStyleBuilder<V>::addFeature(const Feature& _feat, const DrawRule& _rule) {
 
-    if (_feat.geometryType == GeometryType::points) { return; }
+    if (_feat.geometry.type == GeometryType::points) { return; }
     if (!checkRule(_rule)) { return; }
 
     Parameters params = parseRule(_rule, _feat.props);
 
     if (params.fill.width[0] <= 0.0f && params.fill.width[1] <= 0.0f ) { return; }
 
-    if (_feat.geometryType == GeometryType::lines) {
+    if (_feat.geometry.type == GeometryType::lines) {
         // Line geometries are never clipped to tiles, so keep all segments
         params.keepTileEdges = true;
 
-        for (auto& line : _feat.lines) {
+        for (const auto& line : _feat.lines()) {
             addMesh(line, params);
         }
     } else {
         params.closedPolygon = true;
 
-        for (auto& polygon : _feat.polygons) {
+        for (const auto& polygon : _feat.polygons()) {
             for (const auto& line : polygon) {
                 addMesh(line, params);
             }
