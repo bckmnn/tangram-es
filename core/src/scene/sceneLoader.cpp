@@ -317,7 +317,7 @@ void SceneLoader::loadShaderConfig(Node shaders, Style& style, Scene& scene) {
             const std::string& name = uniform.first.Scalar();
             StyleUniform styleUniform;
 
-            if (parseStyleUniforms(uniform.second, scene, styleUniform)) {
+            if (parseStyleUniforms(uniform.second, &scene, styleUniform)) {
                 if (styleUniform.value.is<UniformArray1f>()) {
                     UniformArray1f& array = styleUniform.value.get<UniformArray1f>();
                     shader.addSourceBlock("uniforms", "uniform float " + name +
@@ -1235,7 +1235,7 @@ void SceneLoader::parseStyleParams(Node params, Scene& scene, const std::string&
     }
 }
 
-bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUniform& styleUniform) {
+bool SceneLoader::parseStyleUniforms(const Node& value, Scene* scene, StyleUniform& styleUniform) {
     if (value.IsScalar()) { // float, bool or string (texture)
         double fValue;
         bool bValue;
@@ -1250,11 +1250,14 @@ bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUnifo
             const std::string& strVal = value.Scalar();
             styleUniform.type = "sampler2D";
             std::shared_ptr<Texture> texture;
-            scene.texture(strVal, texture);
 
-            if (!texture && !loadTexture(strVal, scene)) {
-                LOGW("Can't load texture with name %s", strVal.c_str());
-                return false;
+            if (scene) {
+                scene->texture(strVal, texture);
+
+                if (!texture && !loadTexture(strVal, *scene)) {
+                    LOGW("Can't load texture with name %s", strVal.c_str());
+                    return false;
+                }
             }
 
             styleUniform.value = strVal;
@@ -1296,11 +1299,14 @@ bool SceneLoader::parseStyleUniforms(const Node& value, Scene& scene, StyleUnifo
                 const std::string& textureName = strVal.Scalar();
                 textureArrayUniform.names.push_back(textureName);
                 std::shared_ptr<Texture> texture;
-                scene.texture(textureName, texture);
 
-                if (!texture && !loadTexture(textureName, scene)) {
-                    LOGW("Can't load texture with name %s", textureName.c_str());
-                    return false;
+                if (scene) {
+                    scene->texture(textureName, texture);
+
+                    if (!texture && !loadTexture(textureName, *scene)) {
+                        LOGW("Can't load texture with name %s", textureName.c_str());
+                        return false;
+                    }
                 }
             }
 
