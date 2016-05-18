@@ -41,7 +41,7 @@ public:
         yes, no, none
     };
 
-    Scene();
+    Scene(std::shared_ptr<TextureAssets> _textureAssets);
     Scene(const Scene& _other);
     ~Scene();
 

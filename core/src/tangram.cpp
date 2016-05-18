@@ -3,7 +3,7 @@
 #include "platform.h"
 #include "scene/scene.h"
 #include "scene/sceneLoader.h"
-#include "scene/skybox.h"
+#include "scene/textureAssets.h"
 #include "style/material.h"
 #include "style/style.h"
 #include "labels/labels.h"
@@ -41,7 +41,7 @@ std::unique_ptr<TileManager> m_tileManager;
 std::shared_ptr<Scene> m_scene;
 std::shared_ptr<View> m_view;
 std::unique_ptr<Labels> m_labels;
-std::unique_ptr<Skybox> m_skybox;
+std::shared_ptr<TextureAssets> m_textureAssets;
 std::unique_ptr<InputHandler> m_inputHandler;
 
 std::array<Ease, 4> m_eases;
@@ -70,8 +70,10 @@ void initialize(const char* _scenePath) {
     // Create view
     m_view = std::make_shared<View>();
 
+    m_textureAssets = std::make_shared<TextureAssets>();
+
     // Create a scene object
-    m_scene = std::make_shared<Scene>();
+    m_scene = std::make_shared<Scene>(m_textureAssets);
 
     // Input handler
     m_inputHandler = std::make_unique<InputHandler>(m_view);
