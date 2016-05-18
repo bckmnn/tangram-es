@@ -6,8 +6,6 @@
 #include "gl/hardware.h"
 #include "tangram.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 #include <cstring> // for memset
 
@@ -24,58 +22,11 @@ Texture::Texture(unsigned int _width, unsigned int _height, TextureOptions _opti
     resize(_width, _height);
 }
 
-Texture::Texture(const std::string& _file, TextureOptions _options, bool _generateMipmaps, bool _flipOnLoad)
-    : Texture(0u, 0u, _options, _generateMipmaps) {
+Texture::Texture(unsigned char* _data, unsigned int _width, unsigned int _height,
+    TextureOptions _options, bool _generateMipmaps)
+    : Texture(_width, _height, _options, _generateMipmaps) {
 
-    unsigned int size;
-    unsigned char* data;
-
-    data = bytesFromFile(_file.c_str(), PathType::resource, &size);
-
-    loadImageFromMemory(data, size, _flipOnLoad);
-
-    free(data);
-}
-
-Texture::Texture(const unsigned char* data, size_t dataSize, TextureOptions options, bool generateMipmaps, bool _flipOnLoad)
-    : Texture(0u, 0u, options, generateMipmaps) {
-
-    loadImageFromMemory(data, dataSize, _flipOnLoad);
-}
-
-void Texture::loadImageFromMemory(const unsigned char* blob, unsigned int size, bool flipOnLoad) {
-    unsigned char* pixels = nullptr;
-    int width, height, comp;
-
-    // stbi_load_from_memory loads the image as a serie of scanline starting from
-    // the top-left corner of the image. When shouldFlip is set to true, the image
-    // would be flipped vertically.
-    stbi_set_flip_vertically_on_load((int)flipOnLoad);
-
-    if (blob != nullptr && size != 0) {
-        pixels = stbi_load_from_memory(blob, size, &width, &height, &comp, STBI_rgb_alpha);
-    }
-
-    if (pixels) {
-        resize(width, height);
-
-        setData(reinterpret_cast<GLuint*>(pixels), width * height);
-
-        stbi_image_free(pixels);
-
-        m_validData = true;
-    } else {
-        // Default inconsistent texture data is set to a 1*1 pixel texture
-        // This reduces inconsistent behavior when texture failed loading
-        // texture data but a Tangram style shader requires a shader sampler
-        GLuint blackPixel = 0x0000ff;
-
-        setData(&blackPixel, 1);
-
-        LOGE("Decoding image from memory failed");
-
-        m_validData = false;
-    }
+    setData(reinterpret_cast<GLuint*>(_data), _width * _height);
 }
 
 Texture::Texture(Texture&& _other) {
@@ -224,13 +175,7 @@ void Texture::checkValidity() {
 }
 
 bool Texture::isValid() const {
-    return (RenderState::isValidGeneration(m_generation)
-        && m_glHandle != 0
-        && hasValidData());
-}
-
-bool Texture::hasValidData() const {
-    return m_validData;
+    return (RenderState::isValidGeneration(m_generation) && m_glHandle != 0);
 }
 
 void Texture::update(GLuint _textureUnit) {

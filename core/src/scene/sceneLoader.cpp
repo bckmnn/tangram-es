@@ -24,6 +24,7 @@
 #include "scene/stops.h"
 #include "scene/styleMixer.h"
 #include "scene/styleParam.h"
+#include "scene/textureAssets.h"
 #include "util/yamlHelper.h"
 #include "view/view.h"
 
@@ -430,9 +431,9 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene,
     const std::string& name = textureNode.Scalar();
 
     MaterialTexture matTex;
-    matTex.tex = scene.textures()[name];
-
-    if (!matTex.tex) { matTex.tex = std::make_shared<Texture>(name); }
+    if (!scene.texture(name, matTex.tex)) {
+        LOGW("Material texture with name %s was not defined in a texture block", name.c_str());
+    }
 
     if (Node mappingNode = matCompNode["mapping"]) {
         const std::string& mapping = mappingNode.Scalar();
@@ -485,21 +486,7 @@ MaterialTexture SceneLoader::loadMaterialTexture(Node matCompNode, Scene& scene,
 }
 
 bool SceneLoader::loadTexture(const std::string& url, Scene& scene) {
-    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}};
-
-    unsigned int size = 0;
-    unsigned char* blob = bytesFromFile(url.c_str(), PathType::resource, &size);
-
-    if (!blob) {
-        LOGE("Can't load texture resource at url %s", url.c_str());
-        return false;
-    }
-
-    std::shared_ptr<Texture> texture(new Texture(blob, size, options, false));
-
-    free(blob);
-
-    scene.textures().emplace(url, texture);
+    scene.addTexture(url, url, "linear");
 
     return true;
 }
@@ -527,7 +514,6 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
     Node textureConfig = node.second;
 
     std::string file;
-    TextureOptions options = {GL_RGBA, GL_RGBA, {GL_LINEAR, GL_LINEAR}, {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE} };
 
     if (Node url = textureConfig["url"]) {
         file = url.as<std::string>();
@@ -536,15 +522,12 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
         return;
     }
 
-    bool generateMipmaps = false;
-
-    if (Node filtering = textureConfig["filtering"]) {
-        if (extractTexFiltering(filtering, options.filtering)) {
-            generateMipmaps = true;
-        }
+    std::string filtering = "linear";
+    if (Node filteringNode = textureConfig["filtering"]) {
+        filtering = filteringNode.Scalar();
     }
 
-    std::shared_ptr<Texture> texture(new Texture(file, options, generateMipmaps));
+    auto texture = scene.addTexture(file, name, filtering);
 
     if (Node sprites = textureConfig["sprites"]) {
         std::shared_ptr<SpriteAtlas> atlas(new SpriteAtlas(texture, file));
@@ -562,9 +545,9 @@ void SceneLoader::loadTexture(const std::pair<Node, Node>& node, Scene& scene) {
                 atlas->addSpriteNode(spriteName, pos, size);
             }
         }
+
         scene.spriteAtlases()[name] = atlas;
     }
-    scene.textures().emplace(name, texture);
 }
 
 void SceneLoader::loadStyleProps(Style& style, Node styleNode, Scene& scene) {

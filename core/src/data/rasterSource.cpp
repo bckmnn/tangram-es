@@ -7,6 +7,7 @@
 #include "tile/tileTask.h"
 #include "util/geoJson.h"
 #include "platform.h"
+#include "scene/textureAssets.h"
 
 namespace Tangram {
 
@@ -73,7 +74,8 @@ RasterSource::RasterSource(const std::string& _name, const std::string& _urlTemp
                            TextureOptions _options, bool _genMipmap)
     : DataSource(_name, _urlTemplate, _maxZoom), m_texOptions(_options), m_genMipmap(_genMipmap) {
 
-    m_emptyTexture = std::make_shared<Texture>(nullptr, 0, m_texOptions, m_genMipmap, true);
+    // TODO: use TextureAssets::nullTexture()
+    m_emptyTexture = nullptr; //std::make_shared<Texture>(nullptr, 0, m_texOptions, m_genMipmap);
 }
 
 std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _rawTileData) {
@@ -84,11 +86,18 @@ std::shared_ptr<Texture> RasterSource::createTexture(const std::vector<char>& _r
         return m_emptyTexture;
     }
 
-    auto texture = std::make_shared<Texture>(udata, dataSize, m_texOptions, m_genMipmap, true);
+    TextureBlob blob;
+    std::shared_ptr<Texture> texture;
 
-    if (!texture->hasValidData() && dataSize > 0) {
+    if (TextureAssets::decode(udata, dataSize, blob)) {
+        auto texture = std::make_shared<Texture>(blob.data, blob.width, blob.height, m_texOptions, m_genMipmap);
+    } else if (dataSize > 0) {
         LOGE("Texture for data source %s has failed to decode", m_name.c_str());
+
+        // 1x1 black texture
+        texture = TextureAssets::nullTexture();
     }
+
     return texture;
 }
 

@@ -22,6 +22,7 @@ class Light;
 class MapProjection;
 class SpriteAtlas;
 class View;
+class TextureAssets;
 struct Stops;
 
 /* Singleton container of <Style> information
@@ -50,7 +51,7 @@ public:
     auto& layers() { return m_layers; };
     auto& styles() { return m_styles; };
     auto& lights() { return m_lights; };
-    auto& textures() { return m_textures; };
+    const auto& textures() { return m_textures; };
     auto& functions() { return m_jsFunctions; };
     auto& spriteAtlases() { return m_spriteAtlases; };
     auto& stops() { return m_stops; }
@@ -75,6 +76,7 @@ public:
     int addIdForName(const std::string& _name);
     int getIdForName(const std::string& _name) const;
 
+    std::shared_ptr<Texture> addTexture(const std::string& _url, const std::string& _name, std::string _filtering);
     bool texture(const std::string& textureName, std::shared_ptr<Texture>& texture) const;
 
     const int32_t id;
@@ -112,6 +114,8 @@ private:
     std::unordered_map<std::string, std::shared_ptr<Texture>> m_textures;
     std::unordered_map<std::string, std::shared_ptr<SpriteAtlas>> m_spriteAtlases;
     std::unordered_map<std::string, YAML::Node> m_globals;
+
+    std::shared_ptr<TextureAssets> m_textureAssets;
 
     std::vector<Update> m_updates;
 

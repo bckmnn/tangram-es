@@ -11,6 +11,7 @@
 #include "scene/stops.h"
 #include "util/mapProjection.h"
 #include "view/view.h"
+#include "scene/textureAssets.h"
 #include "util/util.h"
 
 #include <atomic>
@@ -82,6 +83,12 @@ bool Scene::texture(const std::string& textureName, std::shared_ptr<Texture>& te
     texture = texIt->second;
 
     return true;
+}
+
+std::shared_ptr<Texture> Scene::addTexture(const std::string& _url, const std::string& _name, std::string _filtering) {
+    auto texture = m_textureAssets->get(_url, _filtering);
+    m_textures[_name] = texture;
+    return texture;
 }
 
 void Scene::queueUpdate(std::string path, std::string value) {

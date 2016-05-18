@@ -28,23 +28,18 @@ struct TextureOptions {
 #define DEFAULT_TEXTURE_OPTION \
     {GL_ALPHA, GL_ALPHA, \
     {GL_LINEAR, GL_LINEAR}, \
-    {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}
+    {GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE}}
 
 class Texture {
 
 public:
 
     Texture(unsigned int _width, unsigned int _height,
-            TextureOptions _options = DEFAULT_TEXTURE_OPTION},
+            TextureOptions _options = DEFAULT_TEXTURE_OPTION,
             bool _generateMipmaps = false);
 
-    Texture(const unsigned char* data, size_t dataSize,
-            TextureOptions _options = DEFAULT_TEXTURE_OPTION},
-            bool _generateMipmaps = false, bool _flipOnLoad = false);
-
-    Texture(const std::string& _file,
-            TextureOptions _options = DEFAULT_TEXTURE_OPTION},
-            bool _generateMipmaps = false, bool _flipOnLoad = false);
+    Texture(unsigned char* _data, unsigned int _width, unsigned int _height,
+            TextureOptions _options = DEFAULT_TEXTURE_OPTION, bool _generateMipmaps = false);
 
     Texture(Texture&& _other);
     Texture& operator=(Texture&& _other);
@@ -81,9 +76,6 @@ public:
 
     /* Checks whether the texture has valid data and has been successfully uploaded to GPU */
     bool isValid() const;
-
-    /* Checks whether the texture has a valid data to upload to GPU */
-    bool hasValidData() const;
 
     typedef std::pair<GLuint, GLuint> TextureSlot;
 
@@ -122,7 +114,6 @@ private:
     size_t bytesPerPixel();
 
     bool m_generateMipmaps;
-    bool m_validData;
 };
 
 }
