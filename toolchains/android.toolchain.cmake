@@ -1176,11 +1176,7 @@ set( CMAKE_COMPILER_IS_GNUASM 1)
 set( CMAKE_ASM_SOURCE_FILE_EXTENSIONS s S asm )
 
 foreach( lang C CXX ASM )
- if( ANDROID_COMPILER_IS_CLANG )
   set( CMAKE_${lang}_COMPILER_VERSION ${ANDROID_CLANG_VERSION} )
- else()
-  set( CMAKE_${lang}_COMPILER_VERSION ${ANDROID_COMPILER_VERSION} )
- endif()
 endforeach()
 
 # flags and definitions
