@@ -1033,7 +1033,7 @@ if( BUILD_WITH_ANDROID_NDK )
     set( ANDROID_RTTI             ON )
     set( ANDROID_CXX_ROOT     "${ANDROID_NDK}/sources/cxx-stl/" )
     set( ANDROID_LLVM_ROOT    "${ANDROID_CXX_ROOT}/llvm-libc++" )
-    if( X86 ) 
+    if( X86 )
         set( ANDROID_ABI_INCLUDE_DIRS "${ANDROID_CXX_ROOT}/gabi++/include" )
     else()
         set( ANDROID_ABI_INCLUDE_DIRS "${ANDROID_CXX_ROOT}/llvm-libc++abi/include" )
@@ -1351,58 +1351,25 @@ if( ARMEABI_V7A )
  set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--fix-cortex-a8" )
 endif()
 
-if( ANDROID_NO_UNDEFINED )
- if( MIPS )
-  # there is some sysroot-related problem in mips linker...
-  if( NOT ANDROID_SYSROOT MATCHES "[ ;\"]" )
-   set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--no-undefined -Wl,-rpath-link,${ANDROID_SYSROOT}/usr/lib" )
-  endif()
- else()
-  set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--no-undefined" )
- endif()
+if( MIPS )
+    # there is some sysroot-related problem in mips linker...
+    if( NOT ANDROID_SYSROOT MATCHES "[ ;\"]" )
+        set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--no-undefined -Wl,-rpath-link,${ANDROID_SYSROOT}/usr/lib" )
+    endif()
+else()
+    set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--no-undefined" )
 endif()
 
-if( ANDROID_SO_UNDEFINED )
- set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,-allow-shlib-undefined" )
-endif()
+set( ANDROID_CXX_FLAGS    "${ANDROID_CXX_FLAGS} -fdata-sections -ffunction-sections" )
+set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--gc-sections" )
 
-if( ANDROID_FUNCTION_LEVEL_LINKING )
- set( ANDROID_CXX_FLAGS    "${ANDROID_CXX_FLAGS} -fdata-sections -ffunction-sections" )
- set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--gc-sections" )
-endif()
+set( ANDROID_CXX_FLAGS    "${ANDROID_CXX_FLAGS} -Xclang -mnoexecstack" )
+set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,-z,noexecstack" )
 
-if( ANDROID_COMPILER_VERSION VERSION_EQUAL "4.6" )
- if( ANDROID_GOLD_LINKER AND (CMAKE_HOST_UNIX OR ANDROID_NDK_RELEASE_NUM GREATER 8002) AND (ARMEABI OR ARMEABI_V7A OR X86) )
-  set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -fuse-ld=gold" )
- elseif( ANDROID_NDK_RELEASE_NUM GREATER 8002 ) # after r8b
-  set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -fuse-ld=bfd" )
- elseif( ANDROID_NDK_RELEASE STREQUAL "r8b" AND ARMEABI AND NOT _CMAKE_IN_TRY_COMPILE )
-  message( WARNING "The default bfd linker from arm GCC 4.6 toolchain can fail with 'unresolvable R_ARM_THM_CALL relocation' error message. See https://code.google.com/p/android/issues/detail?id=35342
-  On Linux and OS X host platform you can workaround this problem using gold linker (default).
-  Rerun cmake with -DANDROID_GOLD_LINKER=ON option in case of problems.
-" )
- endif()
-endif() # version 4.6
+set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,-z,relro -Wl,-z,now" )
 
-if( ANDROID_NOEXECSTACK )
- if( ANDROID_COMPILER_IS_CLANG )
-  set( ANDROID_CXX_FLAGS    "${ANDROID_CXX_FLAGS} -Xclang -mnoexecstack" )
- else()
-  set( ANDROID_CXX_FLAGS    "${ANDROID_CXX_FLAGS} -Wa,--noexecstack" )
- endif()
- set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,-z,noexecstack" )
-endif()
-
-if( ANDROID_RELRO )
- set( ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,-z,relro -Wl,-z,now" )
-endif()
-
-if( ANDROID_COMPILER_IS_CLANG )
- set( ANDROID_CXX_FLAGS "-target ${ANDROID_LLVM_TRIPLE} -Qunused-arguments ${ANDROID_CXX_FLAGS}" )
- if( BUILD_WITH_ANDROID_NDK )
-  set( ANDROID_CXX_FLAGS "-gcc-toolchain ${ANDROID_TOOLCHAIN_ROOT} ${ANDROID_CXX_FLAGS}" )
- endif()
-endif()
+set( ANDROID_CXX_FLAGS "-target ${ANDROID_LLVM_TRIPLE} -Qunused-arguments ${ANDROID_CXX_FLAGS}" )
+set( ANDROID_CXX_FLAGS "-gcc-toolchain ${ANDROID_TOOLCHAIN_ROOT} ${ANDROID_CXX_FLAGS}" )
 
 # cache flags
 set( CMAKE_CXX_FLAGS           ""                        CACHE STRING "c++ flags" )
@@ -1433,40 +1400,23 @@ set( CMAKE_MODULE_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} ${CMAKE_MODULE_LINKER_FL
 set( CMAKE_EXE_LINKER_FLAGS    "${ANDROID_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS}" )
 
 if( MIPS AND BUILD_WITH_ANDROID_NDK AND ANDROID_NDK_RELEASE STREQUAL "r8" )
- set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-T,${ANDROID_NDK_TOOLCHAINS_PATH}/${ANDROID_GCC_TOOLCHAIN_NAME}/mipself.xsc ${CMAKE_SHARED_LINKER_FLAGS}" )
- set( CMAKE_MODULE_LINKER_FLAGS "-Wl,-T,${ANDROID_NDK_TOOLCHAINS_PATH}/${ANDROID_GCC_TOOLCHAIN_NAME}/mipself.xsc ${CMAKE_MODULE_LINKER_FLAGS}" )
- set( CMAKE_EXE_LINKER_FLAGS    "-Wl,-T,${ANDROID_NDK_TOOLCHAINS_PATH}/${ANDROID_GCC_TOOLCHAIN_NAME}/mipself.x ${CMAKE_EXE_LINKER_FLAGS}" )
+    set( CMAKE_SHARED_LINKER_FLAGS "-Wl,-T,${ANDROID_NDK_TOOLCHAINS_PATH}/${ANDROID_GCC_TOOLCHAIN_NAME}/mipself.xsc ${CMAKE_SHARED_LINKER_FLAGS}" )
+    set( CMAKE_MODULE_LINKER_FLAGS "-Wl,-T,${ANDROID_NDK_TOOLCHAINS_PATH}/${ANDROID_GCC_TOOLCHAIN_NAME}/mipself.xsc ${CMAKE_MODULE_LINKER_FLAGS}" )
+    set( CMAKE_EXE_LINKER_FLAGS    "-Wl,-T,${ANDROID_NDK_TOOLCHAINS_PATH}/${ANDROID_GCC_TOOLCHAIN_NAME}/mipself.x ${CMAKE_EXE_LINKER_FLAGS}" )
 endif()
 
 # pie/pic
-if( NOT (ANDROID_NATIVE_API_LEVEL LESS 16) AND (NOT DEFINED ANDROID_APP_PIE OR ANDROID_APP_PIE) AND (CMAKE_VERSION VERSION_GREATER 2.8.8) )
- set( CMAKE_POSITION_INDEPENDENT_CODE TRUE )
- set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fPIE -pie")
-else()
- set( CMAKE_POSITION_INDEPENDENT_CODE FALSE )
- set( CMAKE_CXX_FLAGS "-fpic ${CMAKE_CXX_FLAGS}" )
- set( CMAKE_C_FLAGS   "-fpic ${CMAKE_C_FLAGS}" )
-endif()
+set( CMAKE_POSITION_INDEPENDENT_CODE FALSE )
+set( CMAKE_CXX_FLAGS "-fpic ${CMAKE_CXX_FLAGS}" )
+set( CMAKE_C_FLAGS   "-fpic ${CMAKE_C_FLAGS}" )
 
 # configure rtti
-if( DEFINED ANDROID_RTTI AND ANDROID_STL_FORCE_FEATURES )
- if( ANDROID_RTTI )
-  set( CMAKE_CXX_FLAGS "-frtti ${CMAKE_CXX_FLAGS}" )
- else()
-  set( CMAKE_CXX_FLAGS "-fno-rtti ${CMAKE_CXX_FLAGS}" )
- endif()
-endif()
+set( CMAKE_CXX_FLAGS "-frtti ${CMAKE_CXX_FLAGS}" )
+#set( CMAKE_CXX_FLAGS "-fno-rtti ${CMAKE_CXX_FLAGS}" )
 
 # configure exceptios
-if( DEFINED ANDROID_EXCEPTIONS AND ANDROID_STL_FORCE_FEATURES )
- if( ANDROID_EXCEPTIONS )
-  set( CMAKE_CXX_FLAGS "-fexceptions ${CMAKE_CXX_FLAGS}" )
-  set( CMAKE_C_FLAGS "-fexceptions ${CMAKE_C_FLAGS}" )
- else()
-  set( CMAKE_CXX_FLAGS "-fno-exceptions ${CMAKE_CXX_FLAGS}" )
-  set( CMAKE_C_FLAGS "-fno-exceptions ${CMAKE_C_FLAGS}" )
- endif()
-endif()
+set( CMAKE_CXX_FLAGS "-fexceptions ${CMAKE_CXX_FLAGS}" )
+set( CMAKE_C_FLAGS "-fexceptions ${CMAKE_C_FLAGS}" )
 
 # global includes and link directories
 include_directories( SYSTEM "${ANDROID_SYSROOT}/usr/include" ${ANDROID_STL_INCLUDE_DIRS} )
@@ -1475,68 +1425,53 @@ link_directories( "${__android_install_path}" )
 
 # detect if need link crtbegin_so.o explicitly
 if( NOT DEFINED ANDROID_EXPLICIT_CRT_LINK )
- set( __cmd "${CMAKE_CXX_CREATE_SHARED_LIBRARY}" )
- string( REPLACE "<CMAKE_CXX_COMPILER>" "${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1}" __cmd "${__cmd}" )
- string( REPLACE "<CMAKE_C_COMPILER>"   "${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1}"   __cmd "${__cmd}" )
- string( REPLACE "<CMAKE_SHARED_LIBRARY_CXX_FLAGS>" "${CMAKE_CXX_FLAGS}" __cmd "${__cmd}" )
- string( REPLACE "<LANGUAGE_COMPILE_FLAGS>" "" __cmd "${__cmd}" )
- string( REPLACE "<LINK_FLAGS>" "${CMAKE_SHARED_LINKER_FLAGS}" __cmd "${__cmd}" )
- string( REPLACE "<CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS>" "-shared" __cmd "${__cmd}" )
- string( REPLACE "<CMAKE_SHARED_LIBRARY_SONAME_CXX_FLAG>" "" __cmd "${__cmd}" )
- string( REPLACE "<TARGET_SONAME>" "" __cmd "${__cmd}" )
- string( REPLACE "<TARGET>" "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/toolchain_crtlink_test.so" __cmd "${__cmd}" )
- string( REPLACE "<OBJECTS>" "\"${ANDROID_SYSROOT}/usr/lib/crtbegin_so.o\"" __cmd "${__cmd}" )
- string( REPLACE "<LINK_LIBRARIES>" "" __cmd "${__cmd}" )
- separate_arguments( __cmd )
- foreach( __var ANDROID_NDK ANDROID_NDK_TOOLCHAINS_PATH ANDROID_STANDALONE_TOOLCHAIN )
-  if( ${__var} )
-   set( __tmp "${${__var}}" )
-   separate_arguments( __tmp )
-   string( REPLACE "${__tmp}" "${${__var}}" __cmd "${__cmd}")
-  endif()
- endforeach()
- string( REPLACE "'" "" __cmd "${__cmd}" )
- string( REPLACE "\"" "" __cmd "${__cmd}" )
- execute_process( COMMAND ${__cmd} RESULT_VARIABLE __cmd_result OUTPUT_QUIET ERROR_QUIET )
- if( __cmd_result EQUAL 0 )
-  set( ANDROID_EXPLICIT_CRT_LINK ON )
- else()
-  set( ANDROID_EXPLICIT_CRT_LINK OFF )
- endif()
+    set( __cmd "${CMAKE_CXX_CREATE_SHARED_LIBRARY}" )
+    string( REPLACE "<CMAKE_CXX_COMPILER>" "${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1}" __cmd "${__cmd}" )
+    string( REPLACE "<CMAKE_C_COMPILER>"   "${CMAKE_C_COMPILER} ${CMAKE_C_COMPILER_ARG1}"   __cmd "${__cmd}" )
+    string( REPLACE "<CMAKE_SHARED_LIBRARY_CXX_FLAGS>" "${CMAKE_CXX_FLAGS}" __cmd "${__cmd}" )
+    string( REPLACE "<LANGUAGE_COMPILE_FLAGS>" "" __cmd "${__cmd}" )
+    string( REPLACE "<LINK_FLAGS>" "${CMAKE_SHARED_LINKER_FLAGS}" __cmd "${__cmd}" )
+    string( REPLACE "<CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS>" "-shared" __cmd "${__cmd}" )
+    string( REPLACE "<CMAKE_SHARED_LIBRARY_SONAME_CXX_FLAG>" "" __cmd "${__cmd}" )
+    string( REPLACE "<TARGET_SONAME>" "" __cmd "${__cmd}" )
+    string( REPLACE "<TARGET>" "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/toolchain_crtlink_test.so" __cmd "${__cmd}" )
+    string( REPLACE "<OBJECTS>" "\"${ANDROID_SYSROOT}/usr/lib/crtbegin_so.o\"" __cmd "${__cmd}" )
+    string( REPLACE "<LINK_LIBRARIES>" "" __cmd "${__cmd}" )
+    separate_arguments( __cmd )
+    foreach( __var ANDROID_NDK ANDROID_NDK_TOOLCHAINS_PATH ANDROID_STANDALONE_TOOLCHAIN )
+        if( ${__var} )
+            set( __tmp "${${__var}}" )
+            separate_arguments( __tmp )
+            string( REPLACE "${__tmp}" "${${__var}}" __cmd "${__cmd}")
+        endif()
+    endforeach()
+    string( REPLACE "'" "" __cmd "${__cmd}" )
+    string( REPLACE "\"" "" __cmd "${__cmd}" )
+    execute_process( COMMAND ${__cmd} RESULT_VARIABLE __cmd_result OUTPUT_QUIET ERROR_QUIET )
+    if( __cmd_result EQUAL 0 )
+        set( ANDROID_EXPLICIT_CRT_LINK ON )
+    else()
+        set( ANDROID_EXPLICIT_CRT_LINK OFF )
+    endif()
 endif()
 
 if( ANDROID_EXPLICIT_CRT_LINK )
- set( CMAKE_CXX_CREATE_SHARED_LIBRARY "${CMAKE_CXX_CREATE_SHARED_LIBRARY} \"${ANDROID_SYSROOT}/usr/lib/crtbegin_so.o\"" )
- set( CMAKE_CXX_CREATE_SHARED_MODULE  "${CMAKE_CXX_CREATE_SHARED_MODULE} \"${ANDROID_SYSROOT}/usr/lib/crtbegin_so.o\"" )
+    set( CMAKE_CXX_CREATE_SHARED_LIBRARY "${CMAKE_CXX_CREATE_SHARED_LIBRARY} \"${ANDROID_SYSROOT}/usr/lib/crtbegin_so.o\"" )
+    set( CMAKE_CXX_CREATE_SHARED_MODULE  "${CMAKE_CXX_CREATE_SHARED_MODULE} \"${ANDROID_SYSROOT}/usr/lib/crtbegin_so.o\"" )
 endif()
 
 # setup output directories
 set( CMAKE_INSTALL_PREFIX "${ANDROID_TOOLCHAIN_ROOT}/user" CACHE STRING "path for installing" )
 
-if( DEFINED LIBRARY_OUTPUT_PATH_ROOT
-      OR EXISTS "${CMAKE_SOURCE_DIR}/android/AndroidManifest.xml"
-      OR (EXISTS "${CMAKE_SOURCE_DIR}/../AndroidManifest.xml" AND EXISTS "${CMAKE_SOURCE_DIR}/../jni/") )
-  set( LIBRARY_OUTPUT_PATH_ROOT ${CMAKE_SOURCE_DIR}/android CACHE PATH "Root for binaries output, set this to change where Android libs are installed to" )
-  if( NOT _CMAKE_IN_TRY_COMPILE )
-    if( EXISTS "${CMAKE_SOURCE_DIR}/jni/CMakeLists.txt" )
-      set( EXECUTABLE_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH_ROOT}/bin/${ANDROID_NDK_ABI_NAME}" CACHE PATH "Output directory for applications" )
-    else()
-      set( EXECUTABLE_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH_ROOT}/bin" CACHE PATH "Output directory for applications" )
-    endif()
-    set( LIBRARY_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH_ROOT}/libs/${ANDROID_NDK_ABI_NAME}" CACHE PATH "Output directory for Android libs" )
-  endif()
-endif()
+set( LIBRARY_OUTPUT_PATH_ROOT ${CMAKE_SOURCE_DIR}/android CACHE PATH "Root for binaries output, set this to change where Android libs are installed to" )
+set( EXECUTABLE_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH_ROOT}/bin" CACHE PATH "Output directory for applications" )
+set( LIBRARY_OUTPUT_PATH "${LIBRARY_OUTPUT_PATH_ROOT}/libs/${ANDROID_NDK_ABI_NAME}" CACHE PATH "Output directory for Android libs" )
 
 # copy shaed stl library to build directory
-if( NOT _CMAKE_IN_TRY_COMPILE AND __libstl MATCHES "[.]so$" AND DEFINED LIBRARY_OUTPUT_PATH )
-  get_filename_component( __libstlname "${__libstl}" NAME )
-  execute_process( COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${__libstl}" "${LIBRARY_OUTPUT_PATH}/${__libstlname}" RESULT_VARIABLE __fileCopyProcess )
-  if( NOT __fileCopyProcess EQUAL 0 OR NOT EXISTS "${LIBRARY_OUTPUT_PATH}/${__libstlname}")
-    message( SEND_ERROR "Failed copying of ${__libstl} to the ${LIBRARY_OUTPUT_PATH}/${__libstlname}" )
-  endif()
-  unset( __fileCopyProcess )
-  unset( __libstlname )
-endif()
+get_filename_component( __libstlname "${__libstl}" NAME )
+execute_process( COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${__libstl}" "${LIBRARY_OUTPUT_PATH}/${__libstlname}" RESULT_VARIABLE __fileCopyProcess )
+unset( __fileCopyProcess )
+unset( __libstlname )
 
 
 # set these global flags for cmake client scripts to change behavior
@@ -1551,164 +1486,3 @@ set( CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY )
 set( CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY )
 set( CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY )
 
-
-# macro to find packages on the host OS
-macro( find_host_package )
- set( CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER )
- set( CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER )
- set( CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER )
- if( CMAKE_HOST_WIN32 )
-  SET( WIN32 1 )
-  SET( UNIX )
- elseif( CMAKE_HOST_APPLE )
-  SET( APPLE 1 )
-  SET( UNIX )
- endif()
- find_package( ${ARGN} )
- SET( WIN32 )
- SET( APPLE )
- SET( UNIX 1 )
- set( CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY )
- set( CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY )
- set( CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY )
-endmacro()
-
-
-# macro to find programs on the host OS
-macro( find_host_program )
- set( CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER )
- set( CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER )
- set( CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER )
- if( CMAKE_HOST_WIN32 )
-  SET( WIN32 1 )
-  SET( UNIX )
- elseif( CMAKE_HOST_APPLE )
-  SET( APPLE 1 )
-  SET( UNIX )
- endif()
- find_program( ${ARGN} )
- SET( WIN32 )
- SET( APPLE )
- SET( UNIX 1 )
- set( CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY )
- set( CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY )
- set( CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY )
-endmacro()
-
-
-# export toolchain settings for the try_compile() command
-if( NOT _CMAKE_IN_TRY_COMPILE )
- set( __toolchain_config "")
- foreach( __var NDK_CCACHE  LIBRARY_OUTPUT_PATH_ROOT  ANDROID_FORBID_SYGWIN
-                ANDROID_NDK_HOST_X64
-                ANDROID_NDK
-                ANDROID_NDK_LAYOUT
-                ANDROID_STANDALONE_TOOLCHAIN
-                ANDROID_TOOLCHAIN_NAME
-                ANDROID_ABI
-                ANDROID_NATIVE_API_LEVEL
-                ANDROID_STL
-                ANDROID_STL_FORCE_FEATURES
-                ANDROID_FORCE_ARM_BUILD
-                ANDROID_NO_UNDEFINED
-                ANDROID_SO_UNDEFINED
-                ANDROID_FUNCTION_LEVEL_LINKING
-                ANDROID_GOLD_LINKER
-                ANDROID_NOEXECSTACK
-                ANDROID_RELRO
-                ANDROID_LIBM_PATH
-                ANDROID_EXPLICIT_CRT_LINK
-                ANDROID_APP_PIE
-                )
-  if( DEFINED ${__var} )
-   if( ${__var} MATCHES " ")
-    set( __toolchain_config "${__toolchain_config}set( ${__var} \"${${__var}}\" CACHE INTERNAL \"\" )\n" )
-   else()
-    set( __toolchain_config "${__toolchain_config}set( ${__var} ${${__var}} CACHE INTERNAL \"\" )\n" )
-   endif()
-  endif()
- endforeach()
- file( WRITE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/android.toolchain.config.cmake" "${__toolchain_config}" )
- unset( __toolchain_config )
-endif()
-
-
-# force cmake to produce / instead of \ in build commands for Ninja generator
-if( CMAKE_GENERATOR MATCHES "Ninja" AND CMAKE_HOST_WIN32 )
- # it is a bad hack after all
- # CMake generates Ninja makefiles with UNIX paths only if it thinks that we are going to build with MinGW
- set( CMAKE_COMPILER_IS_MINGW TRUE ) # tell CMake that we are MinGW
- set( CMAKE_CROSSCOMPILING TRUE )    # stop recursion
- enable_language( C )
- enable_language( CXX )
- # unset( CMAKE_COMPILER_IS_MINGW ) # can't unset because CMake does not convert back-slashes in response files without it
- unset( MINGW )
-endif()
-
-
-# Variables controlling behavior or set by cmake toolchain:
-#   ANDROID_ABI : "armeabi-v7a" (default), "armeabi", "armeabi-v7a with NEON", "armeabi-v7a with VFPV3", "armeabi-v6 with VFP", "x86", "mips", "arm64-v8a", "x86_64", "mips64"
-#   ANDROID_NATIVE_API_LEVEL : 3,4,5,8,9,14,15,16,17,18,19,21 (depends on NDK version)
-#   ANDROID_STL : gnustl_static/gnustl_shared/stlport_static/stlport_shared/gabi++_static/gabi++_shared/system_re/system/none
-#   ANDROID_FORBID_SYGWIN : ON/OFF
-#   ANDROID_NO_UNDEFINED : ON/OFF
-#   ANDROID_SO_UNDEFINED : OFF/ON  (default depends on NDK version)
-#   ANDROID_FUNCTION_LEVEL_LINKING : ON/OFF
-#   ANDROID_GOLD_LINKER : ON/OFF
-#   ANDROID_NOEXECSTACK : ON/OFF
-#   ANDROID_RELRO : ON/OFF
-#   ANDROID_FORCE_ARM_BUILD : ON/OFF
-#   ANDROID_STL_FORCE_FEATURES : ON/OFF
-#   ANDROID_LIBM_PATH : path to libm.so (set to something like $(TOP)/out/target/product/<product_name>/obj/lib/libm.so) to workaround unresolved `sincos`
-# Can be set only at the first run:
-#   ANDROID_NDK : path to your NDK install
-#   NDK_CCACHE : path to your ccache executable
-#   ANDROID_TOOLCHAIN_NAME : the NDK name of compiler toolchain
-#   ANDROID_NDK_HOST_X64 : try to use x86_64 toolchain (default for x64 host systems)
-#   ANDROID_NDK_LAYOUT : the inner NDK structure (RELEASE, LINARO, ANDROID)
-#   LIBRARY_OUTPUT_PATH_ROOT : <any valid path>
-#   ANDROID_STANDALONE_TOOLCHAIN
-#
-# Primary read-only variables:
-#   ANDROID : always TRUE
-#   ARMEABI : TRUE for arm v6 and older devices
-#   ARMEABI_V6 : TRUE for arm v6
-#   ARMEABI_V7A : TRUE for arm v7a
-#   ARM64_V8A : TRUE for arm64-v8a
-#   NEON : TRUE if NEON unit is enabled
-#   VFPV3 : TRUE if VFP version 3 is enabled
-#   X86 : TRUE if configured for x86
-#   X86_64 : TRUE if configured for x86_64
-#   MIPS : TRUE if configured for mips
-#   MIPS64 : TRUE if configured for mips64
-#   BUILD_WITH_ANDROID_NDK : TRUE if NDK is used
-#   BUILD_WITH_STANDALONE_TOOLCHAIN : TRUE if standalone toolchain is used
-#   ANDROID_NDK_HOST_SYSTEM_NAME : "windows", "linux-x86" or "darwin-x86" depending on host platform
-#   ANDROID_NDK_ABI_NAME : "armeabi", "armeabi-v7a", "x86", "mips", "arm64-v8a", "x86_64", "mips64" depending on ANDROID_ABI
-#   ANDROID_NDK_RELEASE : from r5 to r10e; set only for NDK
-#   ANDROID_NDK_RELEASE_NUM : numeric ANDROID_NDK_RELEASE version (1000*major+minor)
-#   ANDROID_ARCH_NAME : "arm", "x86", "mips", "arm64", "x86_64", "mips64" depending on ANDROID_ABI
-#   ANDROID_SYSROOT : path to the compiler sysroot
-#   TOOL_OS_SUFFIX : "" or ".exe" depending on host platform
-#   ANDROID_COMPILER_IS_CLANG : TRUE if clang compiler is used
-#
-# Secondary (less stable) read-only variables:
-#   ANDROID_COMPILER_VERSION : GCC version used (not Clang version)
-#   ANDROID_CLANG_VERSION : version of clang compiler if clang is used
-#   ANDROID_CXX_FLAGS : C/C++ compiler flags required by Android platform
-#   ANDROID_SUPPORTED_ABIS : list of currently allowed values for ANDROID_ABI
-#   ANDROID_TOOLCHAIN_MACHINE_NAME : "arm-linux-androideabi", "arm-eabi" or "i686-android-linux"
-#   ANDROID_TOOLCHAIN_ROOT : path to the top level of toolchain (standalone or placed inside NDK)
-#   ANDROID_CLANG_TOOLCHAIN_ROOT : path to clang tools
-#   ANDROID_SUPPORTED_NATIVE_API_LEVELS : list of native API levels found inside NDK
-#   ANDROID_STL_INCLUDE_DIRS : stl include paths
-#   ANDROID_RTTI : if rtti is enabled by the runtime
-#   ANDROID_EXCEPTIONS : if exceptions are enabled by the runtime
-#   ANDROID_GCC_TOOLCHAIN_NAME : read-only, differs from ANDROID_TOOLCHAIN_NAME only if clang is used
-#
-# Defaults:
-#   ANDROID_DEFAULT_NDK_API_LEVEL
-#   ANDROID_DEFAULT_NDK_API_LEVEL_${ARCH}
-#   ANDROID_NDK_SEARCH_PATHS
-#   ANDROID_SUPPORTED_ABIS_${ARCH}
-#   ANDROID_SUPPORTED_NDK_VERSIONS
