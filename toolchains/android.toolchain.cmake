@@ -186,15 +186,6 @@
 
 cmake_minimum_required( VERSION 2.6.3 )
 
-if( DEFINED CMAKE_CROSSCOMPILING )
- # subsequent toolchain loading is not really needed
- return()
-endif()
-
-if( CMAKE_TOOLCHAIN_FILE )
- # touch toolchain variable to suppress "unused variable" warning
-endif()
-
 # inherit settings in recursive loads
 get_property( _CMAKE_IN_TRY_COMPILE GLOBAL PROPERTY IN_TRY_COMPILE )
 if( _CMAKE_IN_TRY_COMPILE )
@@ -218,14 +209,10 @@ set( CMAKE_SKIP_RPATH TRUE CACHE BOOL "If set, runtime paths are not added when 
 # NDK search paths
 set( ANDROID_SUPPORTED_NDK_VERSIONS ${ANDROID_EXTRA_NDK_VERSIONS} -r10e -r10d -r10c -r10b -r10 -r9d -r9c -r9b -r9 -r8e -r8d -r8c -r8b -r8 -r7c -r7b -r7 -r6b -r6 -r5c -r5b -r5 "" )
 if( NOT DEFINED ANDROID_NDK_SEARCH_PATHS )
- if( CMAKE_HOST_WIN32 )
-  file( TO_CMAKE_PATH "$ENV{PROGRAMFILES}" ANDROID_NDK_SEARCH_PATHS )
-  set( ANDROID_NDK_SEARCH_PATHS "${ANDROID_NDK_SEARCH_PATHS}" "$ENV{SystemDrive}/NVPACK" )
- else()
   file( TO_CMAKE_PATH "$ENV{HOME}" ANDROID_NDK_SEARCH_PATHS )
   set( ANDROID_NDK_SEARCH_PATHS /opt "${ANDROID_NDK_SEARCH_PATHS}/NVPACK" )
- endif()
 endif()
+
 if( NOT DEFINED ANDROID_STANDALONE_TOOLCHAIN_SEARCH_PATH )
  set( ANDROID_STANDALONE_TOOLCHAIN_SEARCH_PATH /opt/android-toolchain )
 endif()
@@ -245,7 +232,6 @@ set( ANDROID_DEFAULT_NDK_API_LEVEL_x86 9 )
 set( ANDROID_DEFAULT_NDK_API_LEVEL_x86_64 21 )
 set( ANDROID_DEFAULT_NDK_API_LEVEL_mips 9 )
 set( ANDROID_DEFAULT_NDK_API_LEVEL_mips64 21 )
-
 
 macro( __LIST_FILTER listvar regex )
   if( ${listvar} )
@@ -333,24 +319,6 @@ macro( __DETECT_TOOLCHAIN_MACHINE_NAME _var _root )
     set( ${_var} "" )
   endif()
 endmacro()
-
-
-# fight against cygwin
-set( ANDROID_FORBID_SYGWIN TRUE CACHE BOOL "Prevent cmake from working under cygwin and using cygwin tools")
-mark_as_advanced( ANDROID_FORBID_SYGWIN )
-if( ANDROID_FORBID_SYGWIN )
- if( CYGWIN )
-  message( FATAL_ERROR "Android NDK and android-cmake toolchain are not welcome Cygwin. It is unlikely that this cmake toolchain will work under cygwin. But if you want to try then you can set cmake variable ANDROID_FORBID_SYGWIN to FALSE and rerun cmake." )
- endif()
-
- if( CMAKE_HOST_WIN32 )
-  # remove cygwin from PATH
-  set( __new_path "$ENV{PATH}")
-  __LIST_FILTER( __new_path "cygwin" )
-  set(ENV{PATH} "${__new_path}")
-  unset(__new_path)
- endif()
-endif()
 
 
 # detect current host platform
@@ -472,7 +440,7 @@ if( BUILD_WITH_ANDROID_NDK )
   set( ANDROID_NDK_TOOLCHAINS_PATH "${ANDROID_NDK}/../../${ANDROID_NDK_HOST_SYSTEM_NAME}/toolchain" )
   set( ANDROID_NDK_TOOLCHAINS_SUBPATH  "" )
   set( ANDROID_NDK_TOOLCHAINS_SUBPATH2 "" )
- elseif( ANDROID_NDK_LAYOUT STREQUAL "ANDROID" )
+ elseif( ANDROID_NDK_LAYOUT STREQUAL ANDROID )
   set( ANDROID_NDK_HOST_SYSTEM_NAME ${ANDROID_NDK_HOST_SYSTEM_NAME2} ) # only 32-bit at the moment
   set( ANDROID_NDK_TOOLCHAINS_PATH "${ANDROID_NDK}/../../gcc/${ANDROID_NDK_HOST_SYSTEM_NAME}/arm" )
   set( ANDROID_NDK_TOOLCHAINS_SUBPATH  "" )
