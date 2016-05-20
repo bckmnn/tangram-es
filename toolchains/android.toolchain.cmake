@@ -213,10 +213,6 @@ if( NOT DEFINED ANDROID_NDK_SEARCH_PATHS )
   set( ANDROID_NDK_SEARCH_PATHS /opt "${ANDROID_NDK_SEARCH_PATHS}/NVPACK" )
 endif()
 
-if( NOT DEFINED ANDROID_STANDALONE_TOOLCHAIN_SEARCH_PATH )
- set( ANDROID_STANDALONE_TOOLCHAIN_SEARCH_PATH /opt/android-toolchain )
-endif()
-
 # known ABIs
 set( ANDROID_SUPPORTED_ABIS_arm "armeabi-v7a;armeabi;armeabi-v7a with NEON;armeabi-v7a with VFPV3;armeabi-v6 with VFP" )
 set( ANDROID_SUPPORTED_ABIS_arm64 "arm64-v8a" )
@@ -343,37 +339,24 @@ if( NOT ANDROID_NDK_HOST_X64 )
 endif()
 
 # see if we have path to Android NDK
-if( NOT ANDROID_NDK AND NOT ANDROID_STANDALONE_TOOLCHAIN )
+if( NOT ANDROID_NDK )
   __INIT_VARIABLE( ANDROID_NDK PATH ENV_ANDROID_NDK )
 endif()
 if( NOT ANDROID_NDK )
- # see if we have path to Android standalone toolchain
- __INIT_VARIABLE( ANDROID_STANDALONE_TOOLCHAIN PATH ENV_ANDROID_STANDALONE_TOOLCHAIN )
-
- if( NOT ANDROID_STANDALONE_TOOLCHAIN )
-  #try to find Android NDK in one of the the default locations
-  set( __ndkSearchPaths )
-  foreach( __ndkSearchPath ${ANDROID_NDK_SEARCH_PATHS} )
-   foreach( suffix ${ANDROID_SUPPORTED_NDK_VERSIONS} )
-    list( APPEND __ndkSearchPaths "${__ndkSearchPath}/android-ndk${suffix}" )
-   endforeach()
+ #try to find Android NDK in one of the the default locations
+ set( __ndkSearchPaths )
+ foreach( __ndkSearchPath ${ANDROID_NDK_SEARCH_PATHS} )
+  foreach( suffix ${ANDROID_SUPPORTED_NDK_VERSIONS} )
+   list( APPEND __ndkSearchPaths "${__ndkSearchPath}/android-ndk${suffix}" )
   endforeach()
-  __INIT_VARIABLE( ANDROID_NDK PATH VALUES ${__ndkSearchPaths} )
-  unset( __ndkSearchPaths )
+ endforeach()
+ __INIT_VARIABLE( ANDROID_NDK PATH VALUES ${__ndkSearchPaths} )
+ unset( __ndkSearchPaths )
 
-  if( ANDROID_NDK )
-   message( STATUS "Using default path for Android NDK: ${ANDROID_NDK}" )
-   message( STATUS "  If you prefer to use a different location, please define a cmake or environment variable: ANDROID_NDK" )
-  else()
-   #try to find Android standalone toolchain in one of the the default locations
-   __INIT_VARIABLE( ANDROID_STANDALONE_TOOLCHAIN PATH ANDROID_STANDALONE_TOOLCHAIN_SEARCH_PATH )
-
-   if( ANDROID_STANDALONE_TOOLCHAIN )
-    message( STATUS "Using default path for standalone toolchain ${ANDROID_STANDALONE_TOOLCHAIN}" )
-    message( STATUS "  If you prefer to use a different location, please define the variable: ANDROID_STANDALONE_TOOLCHAIN" )
-   endif( ANDROID_STANDALONE_TOOLCHAIN )
-  endif( ANDROID_NDK )
- endif( NOT ANDROID_STANDALONE_TOOLCHAIN )
+ if( ANDROID_NDK )
+  message( STATUS "Using default path for Android NDK: ${ANDROID_NDK}" )
+  message( STATUS "  If you prefer to use a different location, please define a cmake or environment variable: ANDROID_NDK" )
+ endif( ANDROID_NDK )
 endif( NOT ANDROID_NDK )
 
 # remember found paths
@@ -643,7 +626,7 @@ unset( __availableToolchainArchs )
 unset( __availableToolchainCompilerVersions )
 
 # choose native API level
-__INIT_VARIABLE( ANDROID_NATIVE_API_LEVEL ENV_ANDROID_NATIVE_API_LEVEL ANDROID_API_LEVEL ENV_ANDROID_API_LEVEL ANDROID_STANDALONE_TOOLCHAIN_API_LEVEL ANDROID_DEFAULT_NDK_API_LEVEL_${ANDROID_ARCH_NAME} ANDROID_DEFAULT_NDK_API_LEVEL )
+__INIT_VARIABLE( ANDROID_NATIVE_API_LEVEL ENV_ANDROID_NATIVE_API_LEVEL ANDROID_API_LEVEL ENV_ANDROID_API_LEVEL ANDROID_DEFAULT_NDK_API_LEVEL_${ANDROID_ARCH_NAME} ANDROID_DEFAULT_NDK_API_LEVEL )
 string( REPLACE "android-" "" ANDROID_NATIVE_API_LEVEL "${ANDROID_NATIVE_API_LEVEL}" )
 string( STRIP "${ANDROID_NATIVE_API_LEVEL}" ANDROID_NATIVE_API_LEVEL )
 # adjust API level
@@ -692,13 +675,6 @@ unset( ANDROID_EXCEPTIONS )
 unset( ANDROID_STL_INCLUDE_DIRS )
 unset( __libstl )
 unset( __libsupcxx )
-
-# setup paths and STL for standalone toolchain
-if( BUILD_WITH_STANDALONE_TOOLCHAIN )
- set( ANDROID_TOOLCHAIN_ROOT "${ANDROID_STANDALONE_TOOLCHAIN}" )
- set( ANDROID_CLANG_TOOLCHAIN_ROOT "${ANDROID_STANDALONE_TOOLCHAIN}" )
- set( ANDROID_SYSROOT "${ANDROID_STANDALONE_TOOLCHAIN}/sysroot" )
-endif()
 
 # clang toolchain
 string( REGEX MATCH "3[.][0-9]$" ANDROID_CLANG_VERSION "${ANDROID_TOOLCHAIN_NAME}")
@@ -1107,7 +1083,6 @@ foreach( __var NDK_CCACHE  LIBRARY_OUTPUT_PATH_ROOT  ANDROID_FORBID_SYGWIN
                ANDROID_NDK_HOST_X64
                ANDROID_NDK
                ANDROID_NDK_LAYOUT
-               ANDROID_STANDALONE_TOOLCHAIN
                ANDROID_TOOLCHAIN_NAME
                ANDROID_ABI
                ANDROID_NATIVE_API_LEVEL
