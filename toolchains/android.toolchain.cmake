@@ -734,15 +734,6 @@ else()
 endif()
 unset( __levelIdx )
 
-
-# remember target ABI
-set( ANDROID_ABI "${ANDROID_ABI}" CACHE STRING "The target ABI for Android. If arm, then armeabi-v7a is recommended for hardware floating point." FORCE )
-if( CMAKE_VERSION VERSION_GREATER "2.8" )
- list( SORT ANDROID_SUPPORTED_ABIS_${ANDROID_ARCH_NAME} )
- set_property( CACHE ANDROID_ABI PROPERTY STRINGS ${ANDROID_SUPPORTED_ABIS_${ANDROID_ARCH_NAME}} )
-endif()
-
-
 # runtime choice (STL, rtti, exceptions)
 if( NOT ANDROID_STL )
   set( ANDROID_STL gnustl_static )
@@ -756,12 +747,6 @@ unset( ANDROID_EXCEPTIONS )
 unset( ANDROID_STL_INCLUDE_DIRS )
 unset( __libstl )
 unset( __libsupcxx )
-
-if( NOT _CMAKE_IN_TRY_COMPILE AND ANDROID_NDK_RELEASE STREQUAL "r7b" AND ARMEABI_V7A AND NOT VFPV3 AND ANDROID_STL MATCHES "gnustl" )
- message( WARNING  "The GNU STL armeabi-v7a binaries from NDK r7b can crash non-NEON devices. The files provided with NDK r7b were not configured properly, resulting in crashes on Tegra2-based devices and others when trying to use certain floating-point functions (e.g., cosf, sinf, expf).
-You are strongly recommended to switch to another NDK release.
-" )
-endif()
 
 # setup paths and STL for standalone toolchain
 if( BUILD_WITH_STANDALONE_TOOLCHAIN )
