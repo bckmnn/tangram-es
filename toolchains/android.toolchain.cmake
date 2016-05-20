@@ -1440,3 +1440,37 @@ set( CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY )
 set( CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY )
 set( CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY )
 
+if( NOT _CMAKE_IN_TRY_COMPILE )
+set( __toolchain_config "")
+foreach( __var NDK_CCACHE  LIBRARY_OUTPUT_PATH_ROOT  ANDROID_FORBID_SYGWIN
+               ANDROID_NDK_HOST_X64
+               ANDROID_NDK
+               ANDROID_NDK_LAYOUT
+               ANDROID_STANDALONE_TOOLCHAIN
+               ANDROID_TOOLCHAIN_NAME
+               ANDROID_ABI
+               ANDROID_NATIVE_API_LEVEL
+               ANDROID_STL
+               ANDROID_STL_FORCE_FEATURES
+               ANDROID_FORCE_ARM_BUILD
+               ANDROID_NO_UNDEFINED
+               ANDROID_SO_UNDEFINED
+               ANDROID_FUNCTION_LEVEL_LINKING
+               ANDROID_GOLD_LINKER
+               ANDROID_NOEXECSTACK
+               ANDROID_RELRO
+               ANDROID_LIBM_PATH
+               ANDROID_EXPLICIT_CRT_LINK
+               ANDROID_APP_PIE
+               )
+ if( DEFINED ${__var} )
+  if( ${__var} MATCHES " ")
+   set( __toolchain_config "${__toolchain_config}set( ${__var} \"${${__var}}\" CACHE INTERNAL \"\" )\n" )
+  else()
+   set( __toolchain_config "${__toolchain_config}set( ${__var} ${${__var}} CACHE INTERNAL \"\" )\n" )
+  endif()
+ endif()
+endforeach()
+file( WRITE "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/android.toolchain.config.cmake" "${__toolchain_config}" )
+unset( __toolchain_config )
+endif()
