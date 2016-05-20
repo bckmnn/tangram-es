@@ -331,10 +331,6 @@ set( TOOL_OS_SUFFIX "" )
 if( CMAKE_HOST_APPLE )
  set( ANDROID_NDK_HOST_SYSTEM_NAME "darwin-x86_64" )
  set( ANDROID_NDK_HOST_SYSTEM_NAME2 "darwin-x86" )
-elseif( CMAKE_HOST_WIN32 )
- set( ANDROID_NDK_HOST_SYSTEM_NAME "windows-x86_64" )
- set( ANDROID_NDK_HOST_SYSTEM_NAME2 "windows" )
- set( TOOL_OS_SUFFIX ".exe" )
 elseif( CMAKE_HOST_UNIX )
  set( ANDROID_NDK_HOST_SYSTEM_NAME "linux-x86_64" )
  set( ANDROID_NDK_HOST_SYSTEM_NAME2 "linux-x86" )
@@ -381,45 +377,19 @@ if( NOT ANDROID_NDK )
 endif( NOT ANDROID_NDK )
 
 # remember found paths
-if( ANDROID_NDK )
- get_filename_component( ANDROID_NDK "${ANDROID_NDK}" ABSOLUTE )
- set( ANDROID_NDK "${ANDROID_NDK}" CACHE INTERNAL "Path of the Android NDK" FORCE )
- set( BUILD_WITH_ANDROID_NDK True )
- if( EXISTS "${ANDROID_NDK}/RELEASE.TXT" )
-  file( STRINGS "${ANDROID_NDK}/RELEASE.TXT" ANDROID_NDK_RELEASE_FULL LIMIT_COUNT 1 REGEX "r[0-9]+[a-z]?" )
-  string( REGEX MATCH "r([0-9]+)([a-z]?)" ANDROID_NDK_RELEASE "${ANDROID_NDK_RELEASE_FULL}" )
- else()
-  set( ANDROID_NDK_RELEASE "r1x" )
-  set( ANDROID_NDK_RELEASE_FULL "unreleased" )
- endif()
- string( REGEX REPLACE "r([0-9]+)([a-z]?)" "\\1*1000" ANDROID_NDK_RELEASE_NUM "${ANDROID_NDK_RELEASE}" )
- string( FIND " abcdefghijklmnopqastuvwxyz" "${CMAKE_MATCH_2}" __ndkReleaseLetterNum )
- math( EXPR ANDROID_NDK_RELEASE_NUM "${ANDROID_NDK_RELEASE_NUM}+${__ndkReleaseLetterNum}" )
-elseif( ANDROID_STANDALONE_TOOLCHAIN )
- get_filename_component( ANDROID_STANDALONE_TOOLCHAIN "${ANDROID_STANDALONE_TOOLCHAIN}" ABSOLUTE )
- # try to detect change
- if( CMAKE_AR )
-  string( LENGTH "${ANDROID_STANDALONE_TOOLCHAIN}" __length )
-  string( SUBSTRING "${CMAKE_AR}" 0 ${__length} __androidStandaloneToolchainPreviousPath )
-  if( NOT __androidStandaloneToolchainPreviousPath STREQUAL ANDROID_STANDALONE_TOOLCHAIN )
-   message( FATAL_ERROR "It is not possible to change path to the Android standalone toolchain on subsequent run." )
-  endif()
-  unset( __androidStandaloneToolchainPreviousPath )
-  unset( __length )
- endif()
- set( ANDROID_STANDALONE_TOOLCHAIN "${ANDROID_STANDALONE_TOOLCHAIN}" CACHE INTERNAL "Path of the Android standalone toolchain" FORCE )
- set( BUILD_WITH_STANDALONE_TOOLCHAIN True )
+get_filename_component( ANDROID_NDK "${ANDROID_NDK}" ABSOLUTE )
+set( ANDROID_NDK "${ANDROID_NDK}" CACHE INTERNAL "Path of the Android NDK" FORCE )
+set( BUILD_WITH_ANDROID_NDK True )
+if( EXISTS "${ANDROID_NDK}/RELEASE.TXT" )
+    file( STRINGS "${ANDROID_NDK}/RELEASE.TXT" ANDROID_NDK_RELEASE_FULL LIMIT_COUNT 1 REGEX "r[0-9]+[a-z]?" )
+    string( REGEX MATCH "r([0-9]+)([a-z]?)" ANDROID_NDK_RELEASE "${ANDROID_NDK_RELEASE_FULL}" )
 else()
- list(GET ANDROID_NDK_SEARCH_PATHS 0 ANDROID_NDK_SEARCH_PATH)
- message( FATAL_ERROR "Could not find neither Android NDK nor Android standalone toolchain.
-    You should either set an environment variable:
-      export ANDROID_NDK=~/my-android-ndk
-    or
-      export ANDROID_STANDALONE_TOOLCHAIN=~/my-android-toolchain
-    or put the toolchain or NDK in the default path:
-      sudo ln -s ~/my-android-ndk ${ANDROID_NDK_SEARCH_PATH}/android-ndk
-      sudo ln -s ~/my-android-toolchain ${ANDROID_STANDALONE_TOOLCHAIN_SEARCH_PATH}" )
+    set( ANDROID_NDK_RELEASE "r1x" )
+    set( ANDROID_NDK_RELEASE_FULL "unreleased" )
 endif()
+string( REGEX REPLACE "r([0-9]+)([a-z]?)" "\\1*1000" ANDROID_NDK_RELEASE_NUM "${ANDROID_NDK_RELEASE}" )
+string( FIND " abcdefghijklmnopqastuvwxyz" "${CMAKE_MATCH_2}" __ndkReleaseLetterNum )
+math( EXPR ANDROID_NDK_RELEASE_NUM "${ANDROID_NDK_RELEASE_NUM}+${__ndkReleaseLetterNum}" )
 
 # android NDK layout
 if( BUILD_WITH_ANDROID_NDK )
@@ -451,20 +421,7 @@ if( BUILD_WITH_ANDROID_NDK )
   set( ANDROID_NDK_TOOLCHAINS_SUBPATH2 "/prebuilt/${ANDROID_NDK_HOST_SYSTEM_NAME2}" )
  endif()
  get_filename_component( ANDROID_NDK_TOOLCHAINS_PATH "${ANDROID_NDK_TOOLCHAINS_PATH}" ABSOLUTE )
-
- # try to detect change of NDK
- if( CMAKE_AR )
-  string( LENGTH "${ANDROID_NDK_TOOLCHAINS_PATH}" __length )
-  string( SUBSTRING "${CMAKE_AR}" 0 ${__length} __androidNdkPreviousPath )
-  if( NOT __androidNdkPreviousPath STREQUAL ANDROID_NDK_TOOLCHAINS_PATH )
-   message( FATAL_ERROR "It is not possible to change the path to the NDK on subsequent CMake run. You must remove all generated files from your build folder first.
-   " )
-  endif()
-  unset( __androidNdkPreviousPath )
-  unset( __length )
- endif()
 endif()
-
 
 # get all the details about standalone toolchain
 if( BUILD_WITH_STANDALONE_TOOLCHAIN )
