@@ -832,32 +832,6 @@ set( ANDROID_STL "${ANDROID_STL}" CACHE STRING "C++ runtime" )
 set( ANDROID_STL_FORCE_FEATURES ON CACHE BOOL "automatically configure rtti and exceptions support based on C++ runtime" )
 mark_as_advanced( ANDROID_STL ANDROID_STL_FORCE_FEATURES )
 
-if( BUILD_WITH_ANDROID_NDK )
- if( NOT "${ANDROID_STL}" MATCHES "^(none|system|system_re|gabi\\+\\+_static|gabi\\+\\+_shared|stlport_static|stlport_shared|gnustl_static|gnustl_shared|c\\+\\+_shared)$")
-  message( FATAL_ERROR "ANDROID_STL is set to invalid value \"${ANDROID_STL}\".
-The possible values are:
-  none           -> Do not configure the runtime.
-  system         -> Use the default minimal system C++ runtime library.
-  system_re      -> Same as system but with rtti and exceptions.
-  gabi++_static  -> Use the GAbi++ runtime as a static library.
-  gabi++_shared  -> Use the GAbi++ runtime as a shared library.
-  stlport_static -> Use the STLport runtime as a static library.
-  stlport_shared -> Use the STLport runtime as a shared library.
-  gnustl_static  -> (default) Use the GNU STL as a static library.
-  gnustl_shared  -> Use the GNU STL as a shared library.
-" )
- endif()
-elseif( BUILD_WITH_STANDALONE_TOOLCHAIN )
- if( NOT "${ANDROID_STL}" MATCHES "^(none|gnustl_static|gnustl_shared)$")
-  message( FATAL_ERROR "ANDROID_STL is set to invalid value \"${ANDROID_STL}\".
-The possible values are:
-  none           -> Do not configure the runtime.
-  gnustl_static  -> (default) Use the GNU STL as a static library.
-  gnustl_shared  -> Use the GNU STL as a shared library.
-" )
- endif()
-endif()
-
 unset( ANDROID_RTTI )
 unset( ANDROID_EXCEPTIONS )
 unset( ANDROID_STL_INCLUDE_DIRS )
