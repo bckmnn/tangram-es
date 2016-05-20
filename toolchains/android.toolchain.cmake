@@ -640,12 +640,6 @@ else()
  message( SEND_ERROR "Unknown ANDROID_ABI=\"${ANDROID_ABI}\" is specified." )
 endif()
 
-if( CMAKE_BINARY_DIR AND EXISTS "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeSystem.cmake" )
- # really dirty hack
- # it is not possible to change CMAKE_SYSTEM_PROCESSOR after the first run...
- file( APPEND "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeSystem.cmake" "SET(CMAKE_SYSTEM_PROCESSOR \"${CMAKE_SYSTEM_PROCESSOR}\")\n" )
-endif()
-
 if( ANDROID_ARCH_NAME STREQUAL "arm" AND NOT ARMEABI_V6 )
  __INIT_VARIABLE( ANDROID_FORCE_ARM_BUILD VALUES OFF )
  set( ANDROID_FORCE_ARM_BUILD ${ANDROID_FORCE_ARM_BUILD} CACHE BOOL "Use 32-bit ARM instructions instead of Thumb-1" FORCE )
@@ -825,7 +819,6 @@ if( ANDROID_STL MATCHES "shared" AND DEFINED __libstl )
  # TODO: check if .so file exists before the renaming
 endif()
 
-
 # ccache support
 __INIT_VARIABLE( _ndk_ccache NDK_CCACHE ENV_NDK_CCACHE )
 if( _ndk_ccache )
@@ -837,7 +830,6 @@ else()
  unset( NDK_CCACHE CACHE )
 endif()
 unset( _ndk_ccache )
-
 
 # setup the cross-compiler
 if( NOT CMAKE_C_COMPILER )
@@ -1028,14 +1020,6 @@ if( EXISTS "${__libstl}" OR EXISTS "${__libsupcxx}" )
         set( CMAKE_C_CREATE_SHARED_LIBRARY "${CMAKE_C_CREATE_SHARED_LIBRARY} \"${__libsupcxx}\"" )
         set( CMAKE_C_CREATE_SHARED_MODULE  "${CMAKE_C_CREATE_SHARED_MODULE} \"${__libsupcxx}\"" )
         set( CMAKE_C_LINK_EXECUTABLE       "${CMAKE_C_LINK_EXECUTABLE} \"${__libsupcxx}\"" )
-    endif()
-    if( ANDROID_STL MATCHES "gnustl" )
-        if( NOT EXISTS "${ANDROID_LIBM_PATH}" )
-            set( ANDROID_LIBM_PATH -lm )
-        endif()
-        set( CMAKE_CXX_CREATE_SHARED_LIBRARY "${CMAKE_CXX_CREATE_SHARED_LIBRARY} ${ANDROID_LIBM_PATH}" )
-        set( CMAKE_CXX_CREATE_SHARED_MODULE  "${CMAKE_CXX_CREATE_SHARED_MODULE} ${ANDROID_LIBM_PATH}" )
-        set( CMAKE_CXX_LINK_EXECUTABLE       "${CMAKE_CXX_LINK_EXECUTABLE} ${ANDROID_LIBM_PATH}" )
     endif()
 endif()
 
