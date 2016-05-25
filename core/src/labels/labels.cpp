@@ -259,21 +259,19 @@ void Labels::updateLabelSet(const View& _view, float _dt,
 
     m_isect2d.intersect(m_aabbs);
 
-    std::sort(m_isect2d.pairs.begin(), m_isect2d.pairs.end(),
-              [&](auto& a, auto& b) {
-                  const auto& aabb1 = m_aabbs[a.first];
-                  const auto& aabb2 = m_aabbs[b.first];
-
-                  auto l1 = static_cast<Label*>(aabb1.m_userData);
-                  auto l2 = static_cast<Label*>(aabb2.m_userData);
-
-                  if (l1->options().priority != l2->options().priority) {
-                      // lower numeric priority means higher priority
-                      return l1->options().priority > l2->options().priority;
-                  }
-                  // just so it is consistent between two instances
-                  return (l1->hash() < l2->hash());
-              });
+    // std::sort(m_isect2d.pairs.begin(), m_isect2d.pairs.end(),
+    //           [&](auto& a, auto& b) {
+    //               const auto& aabb1 = m_aabbs[a.first];
+    //               const auto& aabb2 = m_aabbs[b.first];
+    //               auto l1 = static_cast<Label*>(aabb1.m_userData);
+    //               auto l2 = static_cast<Label*>(aabb2.m_userData);
+    //               if (l1->options().priority != l2->options().priority) {
+    //                   // lower numeric priority means higher priority
+    //                   return l1->options().priority > l2->options().priority;
+    //               }
+    //               // just so it is consistent between two instances
+    //               return (l1->hash() < l2->hash());
+    //           });
 
 
     // Narrow Phase, resolve conflicts
