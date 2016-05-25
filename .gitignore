@@ -140,3 +140,6 @@ perf.data
 
 # shader generated headers
 core/include/shaders/*.h
+
+# Qt user version of project files
+*.creator.user
