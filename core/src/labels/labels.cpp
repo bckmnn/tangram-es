@@ -259,19 +259,41 @@ void Labels::updateLabelSet(const View& _view, float _dt,
 
     m_isect2d.intersect(m_aabbs);
 
-    // std::sort(m_isect2d.pairs.begin(), m_isect2d.pairs.end(),
-    //           [&](auto& a, auto& b) {
-    //               const auto& aabb1 = m_aabbs[a.first];
-    //               const auto& aabb2 = m_aabbs[b.first];
-    //               auto l1 = static_cast<Label*>(aabb1.m_userData);
-    //               auto l2 = static_cast<Label*>(aabb2.m_userData);
-    //               if (l1->options().priority != l2->options().priority) {
-    //                   // lower numeric priority means higher priority
-    //                   return l1->options().priority > l2->options().priority;
-    //               }
-    //               // just so it is consistent between two instances
-    //               return (l1->hash() < l2->hash());
-    //           });
+    // Set the first item to be the one with higher priority
+    for (auto& pair : m_isect2d.pairs) {
+        const auto& aabb1 = m_aabbs[pair.first];
+        const auto& aabb2 = m_aabbs[pair.second];
+        auto l1 = static_cast<Label*>(aabb1.m_userData);
+        auto l2 = static_cast<Label*>(aabb2.m_userData);
+        if (l1->options().priority > l2->options().priority) {
+            std::swap(pair.first, pair.second);
+        }
+    }
+
+    // Sort by priority on the first item
+    std::sort(m_isect2d.pairs.begin(), m_isect2d.pairs.end(),
+              [&](auto& a, auto& b) {
+                  const auto& aabb1 = m_aabbs[a.first];
+                  const auto& aabb2 = m_aabbs[b.first];
+                  auto l1 = static_cast<Label*>(aabb1.m_userData);
+                  auto l2 = static_cast<Label*>(aabb2.m_userData);
+                  if (l1->options().priority != l2->options().priority) {
+                      // lower numeric priority means higher priority
+                      return l1->options().priority > l2->options().priority;
+                  }
+
+                  const auto& aabb3 = m_aabbs[a.second];
+                  const auto& aabb4 = m_aabbs[b.second];
+                  auto l3 = static_cast<Label*>(aabb3.m_userData);
+                  auto l4 = static_cast<Label*>(aabb4.m_userData);
+                  if (l3->options().priority != l4->options().priority) {
+                      // lower numeric priority means higher priority
+                      return l3->options().priority > l4->options().priority;
+                  }
+
+                  // just so it is consistent between two instances
+                  return l1 < l2;
+              });
 
 
     // Narrow Phase, resolve conflicts
@@ -311,18 +333,24 @@ void Labels::updateLabelSet(const View& _view, float _dt,
             } else {
                 l2->occlude();
             }
-        } else if (l1->visibleState() != l2->visibleState()) {
-            // keep the visible one, different from occludedLastframe
-            // when one lets labels fade out.
-            // (A label is also in visibleState() when skip_transition is set)
-            if (!l1->visibleState()) {
+        // } else if (l1->visibleState() != l2->visibleState()) {
+        //     // keep the visible one, different from occludedLastframe
+        //     // when one lets labels fade out.
+        //     // (A label is also in visibleState() when skip_transition is set)
+        //     if (!l1->visibleState()) {
+        //         l1->occlude();
+        //     } else {
+        //         l2->occlude();
+        //     }
+        } else if (l1->hash() != l2->hash()) {
+            if (l1->hash() < l2->hash()) {
                 l1->occlude();
             } else {
                 l2->occlude();
             }
         } else {
             // just so it is consistent between two instances
-            if (l1->hash() < l2->hash()) {
+            if (l1 < l2) {
                 l1->occlude();
             } else {
                 l2->occlude();
