@@ -138,3 +138,5 @@ android/demo/gradlew*
 # perf files
 perf.data
 *.creator.user
+qt/build-*
+*.pro.user*
